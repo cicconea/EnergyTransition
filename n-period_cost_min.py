@@ -4,13 +4,13 @@ import matplotlib.pyplot as plt
 
 
 Kl = 0.0
-Kh = 100.0
-Ch_t = 3.0
+Kh = 1000.0
+Ch_t = 1.0
 Cl_t = 3.0
 CER_t = 2.0
-alpha = 0.5
+alpha = 0.1
 el = 0.0
-eh = 50.0
+eh = 5000.0
 r = 0.05
 
 # TODO
@@ -38,6 +38,9 @@ def costSolver(n):
 		investCost.append(icost_t)
 		fixedCost.append(fcost_t)
 
+	print investCost
+	print fixedCost
+
 	icost = dict(zip(values, investCost))
 	fcost = dict(zip(values, fixedCost))
 
@@ -50,10 +53,13 @@ def costSolver(n):
 	emis = eh*Kh*(alpha*float(n) - 0.5*n + 0.5) + el*Kl*float(n)*(alpha - 1) - 0.5*el*Kh*(float(n)+1)
 	cost_model += sum([variables[i] for i in values])*float(n)*(el - eh) >= emis
 	
+	print sum([variables[i] for i in values])*float(n)*(el - eh)
+	print emis
+
 	# capital constraints 
 	for t in range(1, n+1):
-		cost_model += sum([variables[i] for i in values[:t]]) >= -Kl - Kh*(t/n)
-		cost_model += sum([variables[i] for i in values[:t]]) <= Kh*(1 - t/n)
+		cost_model += sum([variables[i] for i in values[:t]]) >= -Kl - Kh*(float(t)/float(n))
+		cost_model += sum([variables[i] for i in values[:t]]) <= Kh*(1 - float(t)/float(n))
 
 
 	cost_model.solve()
@@ -62,6 +68,7 @@ def costSolver(n):
 	for i in values:
 		investSolution.append(pulp.value(variables[i]))
 
+	cost_model.writeLP("10-period-model.lp", writeSOS=1, mip=1)
 	return investSolution
 
 
