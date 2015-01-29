@@ -1,19 +1,24 @@
 import pulp
 import matplotlib.pyplot as plt
 
-Kh = 100
-C1 = 1
-C2 = 3
-CER1 = 2
-CER2 = 2
-alpha = 1.0
 
-n=10
 
-for i in range(1, 2*n+2, 2):
-	print i
+Kl = 0.0
+Kh = 100.0
+Ch_t = 3.0
+Cl_t = 3.0
+CER_t = 2.0
+alpha = 0.5
+el = 0.0
+eh = 50.0
+r = 0.05
 
-def costSolver(d, n):
+# TODO
+# cost generating function more generally
+# solve simple version analytically
+
+
+def costSolver(n):
 	#initialise the model
 	cost_model = pulp.LpProblem("n-period-cost-min", pulp.LpMinimize)
 
@@ -24,41 +29,53 @@ def costSolver(d, n):
 
 
 	# cost data
-	cost = dict(zip(values, [0.013, 0.008, 0.010, 0.002, 0.005, 0.001]))
+	investCost = [] # for coefficents that modify I_t in the cost function
+	fixedCost = [] # for all othe terms independent of I_t but t-dependent
+
+	for i in range(0,n):
+		icost_t = (Cl_t - Ch_t + CER_t)/(1+r)**(i+1)
+		fcost_t = (Kh*(Cl_t - Ch_t))/(n*(1+r)**(i+1))
+		investCost.append(icost_t)
+		fixedCost.append(fcost_t)
+
+	icost = dict(zip(values, investCost))
+	fcost = dict(zip(values, fixedCost))
+
 	# create the objective
-	whiskas_model += sum( [cost[i] * x[i] for i in values])
-
-
-
-	# create the objective
-	cost_model += ((I1 + Kh/n)*(C1) + I1*CER1)*d + ((I2 + Kh/n)*(C2) + I2*CER2)*(d**2)
-
-	# describe constraints
+	cost_model += sum([icost[i] * variables[i] + fcost[i] for i in values])
 
 
 	# emissions constraint
-	cost_model += sum([variables[i] for i in values]) - (Kh/n)*(2*alpha - 1) >= 0.0 
+	# writing on several lines because otherwise impossible to read:
+	emis = eh*Kh*(alpha*float(n) - 0.5*n + 0.5) + el*Kl*float(n)*(alpha - 1) - 0.5*el*Kh*(float(n)+1)
+	cost_model += sum([variables[i] for i in values])*float(n)*(el - eh) >= emis
 	
 	# capital constraints 
-	for i in range(1, 2*n+1, 2):
-		print i
-		cost_model += I1 >= 0.0 
-		cost_model += I1 <= Kh
-		cost_model += I1 + I2 + Kh/n >= 0.0  
-		cost_model += I1 + I2 <= Kh/2 
+	for t in range(1, n+1):
+		cost_model += sum([variables[i] for i in values[:t]]) >= -Kl - Kh*(t/n)
+		cost_model += sum([variables[i] for i in values[:t]]) <= Kh*(1 - t/n)
+
 
 	cost_model.solve()
 
-	return pulp.value(I1), pulp.value(I2)
+	investSolution = []
+	for i in values:
+		investSolution.append(pulp.value(variables[i]))
+
+	return investSolution
 
 
-investments1 = []
-investments2 = []
-delta = []
+print costSolver(10)
 
-for d in range(0,100, 1):
-	delt = d/100.0
-	delta.append(delt)
+
+
+#investments1 = []
+#investments2 = []
+#delta = []
+
+#for d in range(0,100, 1):
+#	delt = d/100.0
+#	delta.append(delt)
 	#invest1, invest2 = costSolver(delt)
 	#investments1.append(invest1)
 	#investments2.append(invest2)
