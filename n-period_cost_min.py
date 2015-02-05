@@ -75,23 +75,3 @@ def costSolver(n):
 
 print costSolver(10)
 
-
-
-#investments1 = []
-#investments2 = []
-#delta = []
-
-#for d in range(0,100, 1):
-#	delt = d/100.0
-#	delta.append(delt)
-	#invest1, invest2 = costSolver(delt)
-	#investments1.append(invest1)
-	#investments2.append(invest2)
-	#print delt, invest1, invest2
-
-
-
-#plt.plot(delta, investments1)
-#plt.plot(delta, investments2)
-#plt.show()
-
