@@ -3,10 +3,8 @@ import matplotlib.pyplot as plt
 import math
 
 
-Kl = 0.0
-Kh = 1000.0
-Ch_t = 1.0
-Cl_t = 1.0
+Kl = 0.0 # initial low emitting capital
+Kh = 1000.0 # intial high emitting capital
 CER_0 = 1.0 # base early retirement cost
 CER_m = 0.1 # slope early retirement cost
 alpha = 0.001 # emissions reduction fraction
@@ -52,7 +50,7 @@ def consGen(n, base):
 	return returnList
 
 
-
+# where n is # of periods to consider
 def costSolver(n):
 	#initialise the model
 	cost_model = pulp.LpProblem("n-period-cost-min", pulp.LpMinimize)
@@ -79,9 +77,8 @@ def costSolver(n):
 
 	# Early Retirement Cost Data
 	ER = [] # for coefficents that modify L_t in the cost function
-
+	ERListCost = linGen(n, CER_0, CER_m)
 	for i in range(1,n+1):
-		ERListCost = linGen(n, CER_0, CER_m)
 		ERcost_t = ERListCost[i-1]/(1+r)**(i)
 		ER.append(ERcost_t)
 
