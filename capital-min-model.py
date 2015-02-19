@@ -6,7 +6,7 @@ import math
 L0 = 0.0 # initial low emitting capital
 H0 = 1000.0 # intial high emitting capital
 
-alpha = 0.001 # emissions reduction fraction
+alpha = 0.5 # emissions reduction fraction
 r = 0.05 # interest rate
 
 Fh_0 = 0.1 # base high emitting efficiency MW/unit
@@ -15,27 +15,48 @@ Fl_0 = 0.05 # base low emitting efficiency MW/unit
 Fl_m = 0.01 # slope low emitting efficiency
 
 el_0 = 1.0 # base emissions for low-intensity capital
-el_m = 0.1 # slope emissions for low-intensity capital
+el_m = -0.1 # slope emissions for low-intensity capital
 eh_0 = 5.0 # base emissions for high-intensity capital
-eh_m = 0.1 # slope emissions for high-intensity capital
+eh_m = -0.1 # slope emissions for high-intensity capital
+
+maxLEff = 0.3 # maximum Fl efficiency MW/$
 
 
 G_0 = 1000.0 # MW electricity demanded
 G_m = 50.0 # annual growth in demand for MW
 
-# generates a n-length list w/ initial base and decay mod (mod must be negative)
-def expGen(n, base, mod):
+# generates a n-length log growth list w/ initial base and decay mod (mod must be negative)
+# add minimum to allow a theoretical limit to efficiency/carbon intensity
+
+def logGen(n, base, mod, maximum):
+	returnList = [base]
+	for i in range(1, n):
+		number = base * math.log(mod*i) + base
+		if number > maximum:
+			number = maximum
+		returnList.append(number)
+	return returnList
+
+# generates a n-length exponential decay list w/ initial base and decay mod (mod must be negative)
+# add minimum to allow a theoretical limit to efficiency/carbon intensity
+
+def expGen(n, base, mod, minimum):
 	returnList = []
 	for i in range(n):
 		number = base * math.exp(mod*i)
+		if number < minimum:
+			number = minimum
 		returnList.append(number)
 	return returnList			
 
 # generates a n-length list w/ intercept base and slope mod
-def linGen(n, base, mod):
+# add minimum to allow a theoretical limit to efficiency/carbon intensity
+def linGen(n, base, mod, minimum):
 	returnList = []
 	for i in range(n):
 		number = base + mod*i
+		if number < minimum:
+			number = minimum
 		returnList.append(number)
 	return returnList			
 
@@ -85,15 +106,17 @@ def Solver(n):
 		LnVar.append(val)
 
 
+	print LnVar
+
 	# generate efficiency and carbon intensity data
 
-	Fl = linGen(n, Fl_0, Fl_m) # low emitting efficiency trajectory
-	Fh = linGen(n, Fh_0, Fh_m) # high emitting efficiency trajectory
+	Fl = logGen(n, Fl_0, Fl_m, maxLEff) # low emitting efficiency trajectory
+	Fh = consGen(n, Fh_0) # high emitting efficiency trajectory assuming no efficiency improvement
 
-	el = linGen(n, el_0, el_m) # low emitting carbon intensity trajectory
-	eh = linGen(n, eh_0, eh_m) # high emitting carbon intensity trajectory
+	el = consGen(n, el_0) # low emitting carbon intensity trajectory
+	eh = linGen(n, eh_0, eh_m, 0) # high emitting carbon intensity trajectory
 
-	G = linGen(n, G_0, G_m) # energy demand over time
+	G = consGen(n, G_0) # energy demand over time
 
 
 	# sum over positive investments as objective function, ignoring first investments
@@ -149,7 +172,7 @@ def Solver(n):
 
 
 
-	cost_model.writeLP("10-period-efficiency-model.lp", writeSOS=1, mip=1)
+	#cost_model.writeLP("10-period-efficiency-model.lp", writeSOS=1, mip=1)
 	
 	return HinvestSolution, LinvestSolution
 
