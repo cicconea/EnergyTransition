@@ -21,7 +21,6 @@ eh_m = -0.1 # slope emissions for high-intensity capital
 
 maxLEff = 0.3 # maximum Fl efficiency MW/$
 
-
 G_0 = 1000.0 # MW electricity demanded
 G_m = 50.0 # annual growth in demand for MW
 

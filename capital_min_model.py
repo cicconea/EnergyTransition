@@ -1,29 +1,5 @@
 import pulp
 
-L0 = 0.0 # initial low emitting capital
-H0 = 1000.0 # intial high emitting capital
-
-alpha = 0.5 # emissions reduction fraction
-r = 0.05 # interest rate
-
-Fh_0 = 0.1 # base high emitting efficiency MW/unit
-Fh_m = 0.01 # slope high emitting efficiency
-Fl_0 = 0.05 # base low emitting efficiency MW/unit
-Fl_m = 0.1 # slope low emitting efficiency
-
-el_0 = 1.0 # base emissions for low-intensity capital
-el_m = -0.1 # slope emissions for low-intensity capital
-eh_0 = 5.0 # base emissions for high-intensity capital
-eh_m = -0.1 # slope emissions for high-intensity capital
-
-maxLEff = 0.3 # maximum Fl efficiency MW/$
-
-
-G_0 = 1000.0 # MW electricity demanded
-G_m = 50.0 # annual growth in demand for MW
-
-
-
 # where n is # of periods to consider
 def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GList):
 	#initialise the model
