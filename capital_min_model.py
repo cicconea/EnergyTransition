@@ -1,7 +1,9 @@
 import pulp
+import numpy as np
 
 # where n is # of periods to consider
 def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GList):
+
 	#initialise the model
 	cost_model = pulp.LpProblem("n-period-capital-min", pulp.LpMinimize)
 
@@ -50,22 +52,22 @@ def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GLi
 
 	# emissions constraint
 	emit = 0
-	for t in range(0, period): # index through the summation for clarity/ease
+	for t in range(1, period): # index through the summation for clarity/ease
 		for i in range(0,t):
 			highEmit = ehList[t] * FhList[t] * (HpVar[i] + HnVar[i]) * (1.0-1.0/float(nh))**(t-i)		
 			lowEmit  = elList[t] * FlList[t] * (LpVar[i] + LnVar[i]) * (1.0-1.0/float(nl))**(t-i)
 			emit += highEmit + lowEmit
 
-	cost_model += emit <= alpha*period*(eh_0*Fh_0*H0 + el_0*Fl_0*L0)
+	cost_model += emit <= alpha*period*(ehList[0]*FhList[0]*H0 + elList[0]*FlList[0]*L0)
 
 
 	# energy demand constraints
-	for t in range(0, period): # index through the summation for clarity/ease
+	for t in range(1, period): # index through the summation for clarity/ease
 		gen = 0
-		for i in range(0,t):
+		for i in range(1,t):
 			iGen = FhList[t] * (HpVar[i] + HnVar[i]) * (1.0-1.0/float(nh))**(t-i) + FlList[t] * (LpVar[i] + LnVar[i]) * (1.0-1.0/float(nl))**(t-i)	
 			gen += iGen
-		cost_model += gen == float(GList[t])
+		cost_model += gen + FhList[0]*H0*(1-1.0/float(nh))**t + FlList[0]*L0*(1-1.0/float(nl))**t == float(GList[t])
 
 
 	# investments cannot be negative
@@ -81,15 +83,19 @@ def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GLi
 
 
 	# create list of optimal decision variable values
-	HinvestSolution = []
-	LinvestSolution = []
-	for i in range(1, period+1):
-		HinvestSolution.append((pulp.value(HpVar[i]), pulp.value(HnVar[i])))
-		LinvestSolution.append((pulp.value(LpVar[i]), pulp.value(LnVar[i])))
+	HpinvestSolution = []
+	HninvestSolution = []
+	LpinvestSolution = []
+	LninvestSolution = []
 
+	for i in range(1, period+1):
+		HpinvestSolution.append(pulp.value(HpVar[i]))
+		HninvestSolution.append(pulp.value(HnVar[i]))
+		LpinvestSolution.append(pulp.value(LpVar[i]))
+		LninvestSolution.append(pulp.value(LnVar[i]))
 
 
 	cost_model.writeLP("capital.lp", writeSOS=1, mip=1)
 	
-	return HinvestSolution, LinvestSolution
+	return np.array(HpinvestSolution), np.array(HninvestSolution), np.array(LpinvestSolution), np.array(LninvestSolution)
 
