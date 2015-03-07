@@ -15,7 +15,7 @@ Fh_m = 0.01 # slope high emitting efficiency
 Fl_0 = 0.05 # base low emitting efficiency MW/unit
 Fl_m = 0.01 # slope low emitting efficiency
 
-el_0 = 1.0 # base emissions for low-intensity capital
+el_0 = 0.0 # base emissions for low-intensity capital
 el_m = -0.1 # slope emissions for low-intensity capital
 eh_0 = 5.0 # base emissions for high-intensity capital
 eh_m = -0.1 # slope emissions for high-intensity capital
@@ -25,7 +25,7 @@ maxLEff = 0.3 # maximum Fl efficiency MW/$
 G_0 = 1000.0 # MW electricity demanded
 G_m = 50.0 # annual growth in demand for MW
 
-period = 50 # simulation length (!= to n)
+period = 3 # simulation length (!= to n)
 nh = 30 # depreciation length for high emitting
 nl = 30 # depreciation length for low emitting
 
@@ -42,14 +42,21 @@ HnMeanList = np.ndarray((period,))
 LpMeanList = np.ndarray((period,))
 LnMeanList = np.ndarray((period,))
 
-mcRange = 1000
+mcRange = 1
 
 for i in range(mcRange):
-	FlList = logistic(period, Fl_0, True, True, minVal=0., maxVal=0.5) # low emitting efficiency trajectory
-	FhList = logistic(period, Fh_0, True, True, minVal=0., maxVal=0.6) # high emitting efficiency trajectory assuming no efficiency improvement
+	FlList = logistic(period, Fl_0, True, False, minVal=0., maxVal=0.5) # low emitting efficiency trajectory
+	FhList = logistic(period, Fh_0, True, False, minVal=0., maxVal=0.6) # high emitting efficiency trajectory assuming no efficiency improvement
 
-	elList = logistic(period, el_0, False, True, minVal=1, maxVal=2) # low emitting carbon intensity trajectory
-	ehList = logistic(period, eh_0, False, True, minVal=5, maxVal=10) # high emitting carbon intensity trajectory
+	elList = logistic(period, el_0, False, False, minVal=0., maxVal=1.) # low emitting carbon intensity trajectory
+	ehList = logistic(period, eh_0, False, False, minVal=5, maxVal=10) # high emitting carbon intensity trajectory
+
+
+	print FlList
+	print FhList
+
+	print elList
+	print ehList
 
 
 	Hp, Hn, Lp, Ln = Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GList)
@@ -69,17 +76,23 @@ HnMean = np.mean(HnMeanList, axis = 1)
 LpMean = np.mean(LpMeanList, axis = 1)
 LnMean = np.mean(LnMeanList, axis = 1)
 
+print HpMean
+print HnMean
+print LpMean
+print LnMean
+
+
 
 xRange = range(period)
 
-plt.plot(xRange, HpMean, label="HpMean")
-plt.plot(xRange, -HnMean, label="HnMean")
-plt.plot(xRange, LpMean, label="LpMean")
-plt.plot(xRange, -LnMean, label="LnMean")
+plt.plot(xRange, HpMean, label="Positive Investment in High-Emitting")
+plt.plot(xRange, -HnMean, label="Negative Investment in High-Emitting")
+plt.plot(xRange, LpMean, label="Positive Investment in Low-Emitting")
+plt.plot(xRange, -LnMean, label="Negative Investment in Low-Emitting")
 
-#axarr.title("Difference in Temperature of Air vs Altitude")
-#axarr.ylabel("Altitude (m)")
-#axarr.xlabel("Difference between Temperature and Dewpoint Temperature")
+plt.title("Investment over Time")
+plt.ylabel("Investment")
+plt.xlabel("Years after Simulation Start")
 plt.legend(loc = 0)
 plt.show()
 

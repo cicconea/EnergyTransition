@@ -48,26 +48,25 @@ def consGen(k, base):
 	return returnList
 
 
-def truncGaussian(var, minVal, maxVal):
-# biases results towards middle of distribution. Maybe change?
-	a = minVal - var
-	b = maxVal - var
-	#print a, b
+def truncGaussian(var, a, b):
 	x = truncnorm.rvs(a,b)
 	#print x
-	return x
+	return (1+x)*var
 
 
 def Gaussian(var):
-	return norm.rvs()
+	return norm.rvs()*var
 
 
 # mean, scale are positive, increasing is boolean and minVal/maxVal are limits of
 # logistic curve. randomAllowed is boolean for adding random noise to simulation
 def logistic(k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1):
 	returnList = [initial]	
+
+	if randomAllowed == True:
+		scale = truncGaussian(scale, 0, 5)
 	
-	if increasing:
+	if increasing == True:
 		priorY = initial - minVal
 		diff = maxVal - minVal
 		for i in range(1, k):
@@ -76,30 +75,19 @@ def logistic(k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxV
 			returnList.append(appendY + minVal)
 			priorY = appendY        
 
-	if not increasing:
+	if increasing == False:
 		priorY = maxVal - initial
+		diff = maxVal - minVal
 		for i in range(1, k):
-			dpdt = scale*priorY*(1-(priorY/maxVal))
-			appendY = dpdt + priorY
-			returnList.append(maxVal - appendY + minVal)
+			dpdt = scale*priorY*(1-(priorY/diff))
+			appendY = priorY + dpdt
+			returnList.append(maxVal - appendY)
 			priorY = appendY
 
-	if randomAllowed:
-		for i in range(1, k):
-			rdm = truncGaussian(returnList[i], minVal, maxVal)
-			returnList[i] = returnList[i] + rdm
 
     
 	return returnList
 
-
-#randomTest = logistic(30, 0.1, True, True, minVal=0.05, maxVal=0.8)
-#nonRandomTest = logistic(30, 0.1, True, False, minVal=0.05, maxVal=0.8)
-#xRange = range(30)
-#plt.plot(xRange,randomTest)
-#plt.plot(xRange, nonRandomTest)
-
-#plt.show()
 
 
 

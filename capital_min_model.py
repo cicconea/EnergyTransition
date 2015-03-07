@@ -45,10 +45,13 @@ def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GLi
 
 	costSum = 0
 	for i in range(1, period+1):
-		costSum += LpVar[i] + HpVar[i]
+		costSum += (LpVar[i] + HpVar[i])/(1 + r)**i
+
 	cost_model += costSum
 
-
+	print "Objective is:"
+	print costSum
+	print 
 
 	# emissions constraint
 	emit = 0
@@ -59,16 +62,26 @@ def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GLi
 			emit += highEmit + lowEmit
 
 	cost_model += emit <= alpha*period*(ehList[0]*FhList[0]*H0 + elList[0]*FlList[0]*L0)
-
+	
+	print "Emissions Constraint is:"
+	print emit
+	print alpha*period*(ehList[0]*FhList[0]*H0 + elList[0]*FlList[0]*L0)
+	print 
 
 	# energy demand constraints
 	for t in range(1, period): # index through the summation for clarity/ease
 		gen = 0
 		for i in range(1,t):
 			iGen = FhList[t] * (HpVar[i] + HnVar[i]) * (1.0-1.0/float(nh))**(t-i) + FlList[t] * (LpVar[i] + LnVar[i]) * (1.0-1.0/float(nl))**(t-i)	
+			print i, iGen
 			gen += iGen
-		cost_model += gen + FhList[0]*H0*(1-1.0/float(nh))**t + FlList[0]*L0*(1-1.0/float(nl))**t == float(GList[t])
-
+		cost_model += gen + FhList[t]*H0*(1-1.0/float(nh))**t + FlList[t]*L0*(1-1.0/float(nl))**t == float(GList[t])
+		
+		print 
+		print "Generation Constraint in Year ", t
+		print gen
+		print gen + FhList[t]*H0*(1-1.0/float(nh))**t + FlList[t]*L0*(1-1.0/float(nl))**t, " must equal ", float(GList[t])
+		print 
 
 	# investments cannot be negative
 	for i in range(1, period+1):
@@ -97,5 +110,7 @@ def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GLi
 
 	cost_model.writeLP("capital.lp", writeSOS=1, mip=1)
 	
+	print cost_model.status
+
 	return np.array(HpinvestSolution), np.array(HninvestSolution), np.array(LpinvestSolution), np.array(LninvestSolution)
 
