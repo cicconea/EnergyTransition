@@ -24,19 +24,19 @@ def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GLi
 
 	# add variables to pulp and put them in lists for access later
 	for hval in Hp:
-		val = pulp.LpVariable(hval, lowBound=0.0, cat='Continuous')
+		val = pulp.LpVariable(hval, lowBound=0.0, upBound=None, cat='Continuous', e = None)
 		HpVar.append(val)
 
 	for hval in Hn:
-		val = pulp.LpVariable(hval, lowBound=0.0, cat='Continuous')
+		val = pulp.LpVariable(hval, lowBound=0.0, upBound=None, cat='Continuous', e = None)
 		HnVar.append(val)
 
 	for lval in Lp:
-		val = pulp.LpVariable(lval, lowBound=0.0, cat='Continuous')
+		val = pulp.LpVariable(lval, lowBound=0.0, upBound=None, cat='Continuous', e = None)
 		LpVar.append(val)
 
 	for lval in Ln:
-		val = pulp.LpVariable(lval, lowBound=0.0, cat='Continuous')
+		val = pulp.LpVariable(lval, lowBound=0.0, upBound=None, cat='Continuous', e = None)
 		LnVar.append(val)
 
 
@@ -49,51 +49,47 @@ def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GLi
 
 	cost_model += costSum
 
-	print "Objective is:"
-	print costSum
-	print 
-
 	# emissions constraint
 	emit = 0
-	for t in range(1, period): # index through the summation for clarity/ease
-		for i in range(0,t):
-			highEmit = ehList[t] * FhList[t] * (HpVar[i] + HnVar[i]) * (1.0-1.0/float(nh))**(t-i)		
-			lowEmit  = elList[t] * FlList[t] * (LpVar[i] + LnVar[i]) * (1.0-1.0/float(nl))**(t-i)
+	for t in range(0, period+1): # index through the summation for clarity/ease
+		for i in range(0,t+1):
+			highEmit = ehList[t] * FhList[t] * (HpVar[i] - HnVar[i]) * (1.0-1.0/float(nh))**(t-i)		
+			lowEmit  = elList[t] * FlList[t] * (LpVar[i] - LnVar[i]) * (1.0-1.0/float(nl))**(t-i)
 			emit += highEmit + lowEmit
 
-	cost_model += emit <= alpha*period*(ehList[0]*FhList[0]*H0 + elList[0]*FlList[0]*L0)
+	cost_model += emit <= alpha*(period+1)*(ehList[0]*FhList[0]*H0 + elList[0]*FlList[0]*L0)
 	
-	print "Emissions Constraint is:"
-	print emit
-	print alpha*period*(ehList[0]*FhList[0]*H0 + elList[0]*FlList[0]*L0)
-	print 
+	#print "Emissions Constraint is:"
+	#print emit
+	#print alpha*(period+1)*(ehList[0]*FhList[0]*H0 + elList[0]*FlList[0]*L0)
+	#print 
 
 	# energy demand constraints
-	for t in range(1, period): # index through the summation for clarity/ease
+	for t in range(1, period+1): # index through the summation for clarity/ease
 		gen = 0
-		for i in range(1,t):
-			iGen = FhList[t] * (HpVar[i] + HnVar[i]) * (1.0-1.0/float(nh))**(t-i) + FlList[t] * (LpVar[i] + LnVar[i]) * (1.0-1.0/float(nl))**(t-i)	
-			print i, iGen
+		for i in range(1,t+1):
+			iGen = FhList[t] * (HpVar[i] - HnVar[i]) * (1.0-1.0/float(nh))**(t-i) + FlList[t] * (LpVar[i] - LnVar[i]) * (1.0-1.0/float(nl))**(t-i)	
 			gen += iGen
 		cost_model += gen + FhList[t]*H0*(1-1.0/float(nh))**t + FlList[t]*L0*(1-1.0/float(nl))**t == float(GList[t])
 		
-		print 
-		print "Generation Constraint in Year ", t
-		print gen
-		print gen + FhList[t]*H0*(1-1.0/float(nh))**t + FlList[t]*L0*(1-1.0/float(nl))**t, " must equal ", float(GList[t])
-		print 
+		#print 
+		#print "Generation Constraint in Year ", t
+		#print gen
+		#print gen + FhList[t]*H0*(1-1.0/float(nh))**t + FlList[t]*L0*(1-1.0/float(nl))**t, " must equal ", float(GList[t])
+		#print 
 
 	# investments cannot be negative
 	for i in range(1, period+1):
-		cost_model += HpVar[i] >= 0
-		cost_model += HnVar[i] >= 0
-		cost_model += LpVar[i] >= 0
-		cost_model += LnVar[i] >= 0
+		cost_model += HpVar[i] >= 0.0
+		cost_model += HnVar[i] >= 0.0
+		cost_model += LpVar[i] >= 0.0
+		cost_model += LnVar[i] >= 0.0
 
 
 	# solve model
 	cost_model.solve()
 
+	minCost = pulp.value(cost_model.objective)
 
 	# create list of optimal decision variable values
 	HpinvestSolution = []
@@ -110,7 +106,7 @@ def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GLi
 
 	cost_model.writeLP("capital.lp", writeSOS=1, mip=1)
 	
-	print cost_model.status
+	solved = cost_model.status
 
-	return np.array(HpinvestSolution), np.array(HninvestSolution), np.array(LpinvestSolution), np.array(LninvestSolution)
+	return minCost, solved, np.array(HpinvestSolution), np.array(HninvestSolution), np.array(LpinvestSolution), np.array(LninvestSolution)
 
