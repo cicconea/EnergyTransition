@@ -86,7 +86,7 @@ def logistic(k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxV
 
 
     
-	return returnList
+	return scale, returnList
 
 
 
