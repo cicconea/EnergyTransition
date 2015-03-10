@@ -30,12 +30,14 @@ def expGen(k, base, mod, minimum):
 
 # generates a k-length list w/ intercept base and slope mod
 # add minimum to allow a theoretical limit to efficiency/carbon intensity
-def linGen(k, base, mod, minimum, ):
+def linGen(k, base, mod, minimum=0, maximum=1):
 	returnList = []
 	for i in range(k):
 		number = base + mod*i
 		if number < minimum:
 			number = minimum
+		if number > maximum:
+			number = maximum
 		returnList.append(number)
 	return returnList			
 
