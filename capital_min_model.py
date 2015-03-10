@@ -71,6 +71,7 @@ def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GLi
 			iGen = FhList[t] * (HpVar[i] - HnVar[i]) * (1.0-1.0/float(nh))**(t-i) + FlList[t] * (LpVar[i] - LnVar[i]) * (1.0-1.0/float(nl))**(t-i)	
 			gen += iGen
 		cost_model += gen + FhList[t]*H0*(1-1.0/float(nh))**t + FlList[t]*L0*(1-1.0/float(nl))**t == float(GList[t])
+
 		
 		#print 
 		#print "Generation Constraint in Year ", t

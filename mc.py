@@ -5,8 +5,9 @@ import seaborn as sns
 import csv
 
 
-L0 = 2005.0* 10**3 # initial low emitting capital in kW installed capacity
-H0 = 390130.0 * 10**3 # intial high emitting capital in kW installed capacity
+L0 = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
+H0 = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitting capital 
+	# MW * 1000kW/MW * capacity * $/kW from Fh_0 or Fl_0
 
 alpha = 0.5 # emissions reduction fraction
 r = 0.05 # interest rate
@@ -29,8 +30,8 @@ G_0 = 2798.5 * 10**9 # billion kWh electricity demanded
 G_m = 32.238 * 10**9 # annual growth in demand for electricity in billion kWh
 
 period = 100 # simulation length (!= to n)
-nh = 30 # depreciation length for high emitting
-nl = 30 # depreciation length for low emitting
+nh = 10 # depreciation length for high emitting
+nl = 10 # depreciation length for low emitting
 
 
 # generate efficiency and carbon intensity data
@@ -38,7 +39,7 @@ nl = 30 # depreciation length for low emitting
 # logistic(k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1):
 
 
-GList = linGen(period + 1, G_0, G_m, 0) # energy demand over time
+GList = linGen(period + 1, G_0, G_m, minimum = 0.0, maximum = 6.0 *10.0 **12) # energy demand over time
 
 HpMeanList = np.ndarray((period,))
 HnMeanList = np.ndarray((period,))
@@ -63,19 +64,24 @@ HnHeader = ["Hn_" + str(i) for i in range(1, period+1)]
 LpHeader = ["Lp_" + str(i) for i in range(1, period+1)]
 LnHeader = ["Ln_" + str(i) for i in range(1, period+1)]
 
-header = genericHeader + HpHeader + HnHeader + LpHeader + LnHeader
+FlHeader = ["Fl_" + str(i) for i in range(0, period+1)]
+FhHeader = ["Fh_" + str(i) for i in range(0, period+1)]
+GHeader = ["G_" + str(i) for i in range(0, period+1)]
+
+
+header = genericHeader + HpHeader + HnHeader + LpHeader + LnHeader + FlHeader +FhHeader + GHeader
 writer.writerow(header)
 
 
 #for i in range(mcRange):
-for i in range(0, 30, 1):
+for i in range(0, 100, 10):
 	print i
 
 	line = []
 
 	# logistic arguments: (k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1)
 	# randomAllowed = True varies scale (rate) of change of the trajectory
-	FlScale, FlList = logistic(period+1, Fl_0, True, False, scale = i/10.0, minVal=0.34334988, maxVal=2.8658669) # low emitting efficiency trajectory
+	FlScale, FlList = logistic(period+1, Fl_0, True, False, scale = i/100.0, minVal=0.34334988, maxVal=2.8658669) # low emitting efficiency trajectory
 		# min is half of base, max is efficiency of natural gas ($917/kW) at 30% capacity
 	FhList = linGen(period+1, Fh_0, Fh_m, maximum=4.7764449) # high emitting efficiency trajectory 
 		# weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
@@ -97,6 +103,10 @@ for i in range(0, 30, 1):
 	line.extend(Hn)
 	line.extend(Lp)
 	line.extend(Ln)
+	line.extend(FlList)
+	line.extend(FhList)
+	line.extend(GList)
+
 
 	writer.writerow(line)
 
