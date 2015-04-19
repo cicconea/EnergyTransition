@@ -1,3 +1,9 @@
 *.lp
 *.pyc
+*.csv
+*.yml
+*.ipynb
+*.json
+*.txt
+*.xlsx
 

@@ -79,6 +79,19 @@ def Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GLi
 		#print gen + FhList[t]*H0*(1-1.0/float(nh))**t + FlList[t]*L0*(1-1.0/float(nl))**t, " must equal ", float(GList[t])
 		#print 
 
+	# non-negative capital constraints
+	for t in range(1, period+1):
+		kh = 0
+		kl = 0
+		for i in range(1, t+1):
+			ikh	= (HpVar[i] - HnVar[i]) * (1.0-1.0/float(nh))**(t-i)
+			ikl = (LpVar[i] - LnVar[i]) * (1.0-1.0/float(nl))**(t-i)
+			kh += ikh
+			kl += ikl
+		cost_model += kh >=0
+		cost_model += kl >=0
+
+
 	# investments cannot be negative
 	for i in range(1, period+1):
 		cost_model += HpVar[i] >= 0.0

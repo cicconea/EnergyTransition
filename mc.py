@@ -1,8 +1,9 @@
-from capital_min_model import *
 from func_gen import *
 import matplotlib.pyplot as plt
 import seaborn as sns
 import csv
+from pyomoSimpleMin import *
+import datetime
 
 
 L0 = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
@@ -25,7 +26,6 @@ eh_0 = 1.6984 # base emissions for high intensity capital in lbs CO2/kWh
 eh_m = -0.0031 # slope emissions for high-intensity capital
 
 
-
 G_0 = 2798.5 * 10**9 # billion kWh electricity demanded
 G_m = 32.238 * 10**9 # annual growth in demand for electricity in billion kWh
 
@@ -34,82 +34,39 @@ nh = 10 # depreciation length for high emitting
 nl = 10 # depreciation length for low emitting
 
 
+
+
+Header = ["FlScale", "minCost", "solved", "Hp", "Hn", "Lp", "Ln", "Kh", "Kl", "G", "Fh", "Fl", "mh", "ml"]
+#f = open("pyomoSimple@{0}.csv".format(datetime.datetime.now()),  'wb')
+#writer = csv.writer(f)
+#writer.writerow(header)
+
+
+i = 5
+
 # generate efficiency and carbon intensity data
-
-# logistic(k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1):
-
-
 GList = linGen(period + 1, G_0, G_m, minimum = 0.0, maximum = 6.0 *10.0 **12) # energy demand over time
-
-HpMeanList = np.ndarray((period,))
-HnMeanList = np.ndarray((period,))
-LpMeanList = np.ndarray((period,))
-LnMeanList = np.ndarray((period,))
-
-mcRange = 1
-
-
-f = open('Period100ActualDataFlScaleVary.csv', 'wb')
-writer = csv.writer(f)
-
-
-
-#genericHeader = ["FlScale", "FhScale", "elScale", "ehScale", "minCost", "solved"]
-genericHeader = ["FlScale", "minCost", "solved"]
-
-
-HpHeader = ["Hp_" + str(i) for i in range(1, period+1)]
-HnHeader = ["Hn_" + str(i) for i in range(1, period+1)]
-
-LpHeader = ["Lp_" + str(i) for i in range(1, period+1)]
-LnHeader = ["Ln_" + str(i) for i in range(1, period+1)]
-
-FlHeader = ["Fl_" + str(i) for i in range(0, period+1)]
-FhHeader = ["Fh_" + str(i) for i in range(0, period+1)]
-GHeader = ["G_" + str(i) for i in range(0, period+1)]
-
-
-header = genericHeader + HpHeader + HnHeader + LpHeader + LnHeader + FlHeader +FhHeader + GHeader
-writer.writerow(header)
-
-
-#for i in range(mcRange):
-for i in range(0, 100, 10):
-	print i
-
-	line = []
-
-	# logistic arguments: (k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1)
-	# randomAllowed = True varies scale (rate) of change of the trajectory
-	FlScale, FlList = logistic(period+1, Fl_0, True, False, scale = i/100.0, minVal=0.34334988, maxVal=2.8658669) # low emitting efficiency trajectory
-		# min is half of base, max is efficiency of natural gas ($917/kW) at 30% capacity
-	FhList = linGen(period+1, Fh_0, Fh_m, maximum=4.7764449) # high emitting efficiency trajectory 
-		# weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
+# logistic arguments: (k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1)
+# randomAllowed = True varies scale (rate) of change of the trajectory
+FlScale, FlList = logistic(period+1, Fl_0, True, False, scale = i/100.0, minVal=0.34334988, maxVal=2.8658669) # low emitting efficiency trajectory
+	# min is half of base, max is efficiency of natural gas ($917/kW) at 30% capacity
+FhList = linGen(period+1, Fh_0, Fh_m, maximum=4.7764449) # high emitting efficiency trajectory 
+	# weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
 	
-	elList = consGen(period+1, el_0) # low emitting carbon intensity trajectory
-		# constant 
-	ehList = linGen(period+1, eh_0, eh_m, minimum=1.22) # high emitting carbon intensity trajectory
-		# minimum is emission from 100% natural gas.
+mlList = consGen(period+1, el_0) # low emitting carbon intensity trajectory
+	# constant 
+mhList = linGen(period+1, eh_0, eh_m, minimum=1.22) # high emitting carbon intensity trajectory
+	# minimum is emission from 100% natural gas.
 
 
-	minCost, solved, Hp, Hn, Lp, Ln = Solver(period, nh, nl, FlList, FhList, elList, ehList, alpha, H0, L0, r, GList)
+print pyomoSimple(period, GList, FhList, FlList, mhList, mlList, alpha, H0, L0, r, n)
 
 
 
-#	line.extend([FlScale, FhScale, elScale, ehScale])
-	line.extend([FlScale])
-	line.extend([minCost, solved])
-	line.extend(Hp)
-	line.extend(Hn)
-	line.extend(Lp)
-	line.extend(Ln)
-	line.extend(FlList)
-	line.extend(FhList)
-	line.extend(GList)
 
 
-	writer.writerow(line)
 
+writer.writerow(line)
 
 
 
