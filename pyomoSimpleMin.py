@@ -1,17 +1,12 @@
 from __future__ import division
 from pyomo.environ import *
 from math import exp
-from func_gen_simple import *
 from mc_simple import *
-
 
 
 f = open("mc.txt", "r")
 i = f.read()
 f.close()
-
-print i
-print type(i)
 
 
 GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, n = genData(int(i))
