@@ -2,12 +2,12 @@ from __future__ import division
 from pyomo.environ import *
 from math import exp
 from mc_simple import *
+import pprint
 
 
 f = open("mc.txt", "r")
 i = f.read()
 f.close()
-
 
 GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, n = genData(int(i))
 
@@ -27,7 +27,8 @@ model.Ln = Var(N, domain=NonNegativeReals)
 
 # this function builds an expression for capital in time t for capital Hp/Hn/Lp/Ln
 def genK(initial, pVar, nVar, t):
-	return initial * exp(-t/n) + sum([pVar[j] * exp(j-t/n) - nVar[j] for j in range(1, t+1)])
+	capital = initial * exp(-t/n) + sum([pVar[j] * exp((j-t)/n) - nVar[j] for j in range(1, t+1)])
+	return capital
 
 # also set all non-negativity constraints for capital
 for t in range(1, period+1):

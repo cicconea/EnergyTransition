@@ -58,7 +58,7 @@ print
 # varRange is model.Hp_
 # sum from initial investment period i through existing time period t
 def genKExprsn(pVar, nVar, i, t):
-	K = getattr(model, pVar+str(i))[i] * exp(i-t/n) - sum([getattr(model, nVar+str(i))[j] for j in range(i, t+1)])
+	K = getattr(model, pVar+str(i))[i] * exp((i-t)/n) - sum([getattr(model, nVar+str(i))[j] for j in range(i, t+1)])
 	print "K: ", i, t, K
 	return K
 
