@@ -2,7 +2,6 @@ from __future__ import division
 from pyomo.environ import *
 from math import exp
 from helpers import *
-import pprint
 
 
 f = open("mc.txt", "r")
