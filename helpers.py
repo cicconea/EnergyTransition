@@ -105,7 +105,6 @@ def genDataA():
 
 
 
-
 def getCapital(filename):
 	with open(filename) as f:
 		data = f.read()
