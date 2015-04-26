@@ -80,7 +80,7 @@ while stillRunning == True:
 
 
 
-		plt.savefig('FlResults/cap_and_invest_results_' + str(count) + '.png', bbox_inches='tight')
+		plt.savefig('FlResults/cap_and_invest_results_Fl_' + str(count) + '.png', bbox_inches='tight')
 		plt.close()
 
 
