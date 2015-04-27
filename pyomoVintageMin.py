@@ -123,7 +123,7 @@ print
 # emission constraint
 emit = 0
 for t in range(0, period):
-	for i in range(0, t+1):
+	for i in range(1, t+1):
 		emit += mhList[i]*FhList[i]*genKExprsn("Hp", "Hn", i, t) + mhList[i] * FlList[i]*genKExprsn("Lp", "Ln", i, t)
 setattr(model, "emissions", Constraint(expr = emit <= alpha * period *(mhList[0]*FhList[0]*H0 + mlList[0]*FlList[0]*L0)))
 print model.emissions.pprint()
