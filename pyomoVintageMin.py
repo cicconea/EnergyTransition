@@ -9,7 +9,9 @@ H0 = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitti
 	# MW * 1000kW/MW * capacity * $/kW from Fh_0 or Fl_0
 
 alpha = 0.5 # emissions reduction fraction
-beta = 0.4 # fraction of yearly operating costs
+betah = 0.4 # fraction of yearly operating costs
+betal = 0.05 # fraction of yearly operating costs
+
 r = 0.05 # interest rate
 
 kWperYearTokWh = 8760.0 # conversion of 1 kW power capacity for 1 year to kWh energy
@@ -39,8 +41,6 @@ model = ConcreteModel()
  
 N = range(0, period)
 
-print "N: ", N
-
 # create variables
 # Hp_i is the positive investment in high over all years list of all years
 for i in range(0, period):
@@ -48,18 +48,13 @@ for i in range(0, period):
         setattr(model,"Hn"+str(i),Var(N, domain=NonNegativeReals))
         setattr(model,"Lp"+str(i),Var(N, domain=NonNegativeReals))
         setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals))
-        print getattr(model, "Hp"+str(i))
 
-print
-print "______________________________________________"
-print
 
 # this function builds an expression for capital in time t for capital Hp/Hn/Lp/Ln of age i
 # varRange is model.Hp_
 # sum from initial investment period i through existing time period t
 def genKExprsn(pVar, nVar, i, t):
 	K = getattr(model, pVar+str(i))[i] * exp((i-t)/n) - sum([getattr(model, nVar+str(i))[j] for j in range(i, t+1)])
-	print "K: ", i, t, K
 	return K
 
 # can't have values for investments that happen before the year in which they're initialized
@@ -98,26 +93,12 @@ mlList = consGen(period, el_0)
 # high emitting carbon intensity trajectory - minimum is emission from 100% natural gas.
 mhList = linGen(period, eh_0, eh_m, minimum=1.22) 
 
-print "GList", len(GList)
-print "FlList", len(FlList)
-print "FhList", len(FhList)
-print "mlList", len(mlList)
-print "mhList", len(mhList)
-
-
 # generation constraints
 for t in range(1, period):
 	genSum = 0
 	for i in range(0, t+1):
 		genSum += FhList[i]*genKExprsn("Hp", "Hn", i, t) + FlList[i]*genKExprsn("Lp", "Ln", i, t)
-		print t, i
 	setattr(model, "Gen"+str(t), Constraint(expr = genSum == GList[t]))
-	print getattr(model, "Gen"+str(t)).pprint()
-
-
-print
-print "______________________________________________"
-print
 
 
 # emission constraint
@@ -125,18 +106,37 @@ emit = 0
 for t in range(0, period):
 	for i in range(1, t+1):
 		emit += mhList[i]*FhList[i]*genKExprsn("Hp", "Hn", i, t) + mhList[i] * FlList[i]*genKExprsn("Lp", "Ln", i, t)
+
 setattr(model, "emissions", Constraint(expr = emit <= alpha * period *(mhList[0]*FhList[0]*H0 + mlList[0]*FlList[0]*L0)))
-print model.emissions.pprint()
 
 
-print
-print "______________________________________________"
-print
+# objective function is present value of investment cost minus operating cost savings
 
-# sum over positive investments as objective function
+OCh = 0
+OCl = 0
+for i in range(0, len(N)):
+	for t in range(i, len(N)):
+		subh = 0
+		subl = 0
+		for x in range(i, t+1):
+			subh += getattr(model, "Hn"+str(i))[x]
+			subl += getattr(model, "Ln"+str(i))[x]
+		subh *= exp(-r*t)
+		subl *= exp(-r*t)
+		OCh += subh
+		OCl += subl
 
-model.OBJ = Objective(expr = sum([(getattr(model, "Hp"+str(i))[i] + getattr(model, "Lp"+str(i))[i])*exp(-r*i) for i in N]))
-print model.OBJ.pprint()
+
+model.OBJ = Objective(expr = sum([(getattr(model, "Hp"+str(i))[i] + getattr(model, "Lp"+str(i))[i])*exp(-r*i) for i in N]) - betah*OCh - betal*OCl)
+
+
+
+
+
+
+
+
+
 
 
 
