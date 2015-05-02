@@ -85,7 +85,7 @@ GList = linGen(period, G_0, G_m, minimum = 0.0, maximum = 6.0 *10.0 **12) # ener
 # logistic arguments: (k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1)
 # randomAllowed = True varies scale (rate) of change of the trajectory
 # low emitting efficiency trajectory min is half of base, max is efficiency of natural gas ($917/kW) at 30% capacity
-FlScale, FlList = logistic(period, Fl_0, True, False, scale = i/100.0, minVal=0.34334988, maxVal=2.8658669) 
+FlScale, FlList = logistic(period, Fl_0, True, False, scale = 5/100.0, minVal=0.34334988, maxVal=2.8658669) 
 # weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
 FhList = linGen(period, Fh_0, Fh_m, maximum=4.7764449) # high emitting efficiency trajectory 
 # low emitting carbon intensity trajectory - constant
