@@ -3,8 +3,6 @@ from pyomo.environ import *
 from math import exp
 from vintageHelpers import * 
 
-import pdb
-
 
 
 f = open("mc.txt", "r")
@@ -12,51 +10,41 @@ i = int(f.read())
 f.close()
 
 
-GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, n = genData(i)
 
-print len(GList)
-print len(FlList)
-print len(FhList)
-print len(mlList)
-print len(mhList)
-print period
+GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, n = genData(i)
 
 betah = 0.4
 betal = 0.05
 
 
-pdb.set_trace()
 
 # initialize model
 model = ConcreteModel()
  
+
 N = range(0, period)
 
 # create variables
 # Hp_i is the positive investment in high over all years list of all years
 for i in range(0, period):
-	setattr(model,"Hp"+str(i),Var(N, domain=NonNegativeReals))
+	setattr(model,"Hp"+str(i),Var(domain=NonNegativeReals))
 	setattr(model,"Hn"+str(i),Var(N, domain=NonNegativeReals))
-	setattr(model,"Lp"+str(i),Var(N, domain=NonNegativeReals))
+	setattr(model,"Lp"+str(i),Var(domain=NonNegativeReals))
 	setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals))
-
-	print getattr(model, "Hp"+str(i))
 
 
 # this function builds an expression for capital in time t for capital Hp/Hn/Lp/Ln of age i
 # varRange is model.Hp_
 # sum from initial investment period i through existing time period t
 def genKExprsn(pVar, nVar, i, t):
-	K = getattr(model, pVar+str(i))[i] * exp((i-t)/n) - sum([getattr(model, nVar+str(i))[j] for j in range(i, t+1)])
+	K = getattr(model, pVar+str(i)) * exp((i-t)/n) - sum([getattr(model, nVar+str(i))[j] for j in range(i, t+1)])
 	return K
 
 # can't have values for investments that happen before the year in which they're initialized
 for i in range(0, period):
 	for t in range(0, period):
 		if t<i:
-			setattr(model, "HpTimeLogic"+str(i)+str(t), Constraint(expr = getattr(model, "Hp"+str(i))[t] == 0))
 			setattr(model, "HnTimeLogic"+str(i)+str(t), Constraint(expr = getattr(model, "Hn"+str(i))[t] == 0))
-			setattr(model, "LpTimeLogic"+str(i)+str(t), Constraint(expr = getattr(model, "Lp"+str(i))[t] == 0))
 			setattr(model, "LnTimeLogic"+str(i)+str(t), Constraint(expr = getattr(model, "Ln"+str(i))[t] == 0))
 
 		# also set all non-negativity constraints for capital
@@ -65,10 +53,8 @@ for i in range(0, period):
 
 
 #initialize starting points
-model.Hp0Cons = Constraint(expr = model.Hp0[0] == H0)
-model.Hn0Cons = Constraint(expr = model.Hn0[0] == 0)
-model.Lp0Cons = Constraint(expr = model.Lp0[0] == L0)
-model.Ln0Cons = Constraint(expr = model.Ln0[0] == 0)
+model.Hp0Cons = Constraint(expr = model.Hp0 == H0)
+model.Lp0Cons = Constraint(expr = model.Lp0 == L0)
 
 
 
@@ -83,10 +69,12 @@ for t in range(1, period):
 # emission constraint
 emit = 0
 for t in range(0, period):
-	for i in range(1, t+1):
-		emit += mhList[i]*FhList[i]*genKExprsn("Hp", "Hn", i, t) + mhList[i] * FlList[i]*genKExprsn("Lp", "Ln", i, t)
+	for i in range(0, t+1):
+		emit += mhList[i]*FhList[i]*genKExprsn("Hp", "Hn", i, t) + mlList[i] * FlList[i]*genKExprsn("Lp", "Ln", i, t)
 
-setattr(model, "emissions", Constraint(expr = emit <= alpha * period *(mhList[0]*FhList[0]*H0 + mlList[0]*FlList[0]*L0)))
+maxEmit = alpha * sum([mhList[i]*FhList[i]*H0 + mlList[i]*FlList[i]*L0 for i in N])
+setattr(model, "emissions", Constraint(expr = emit <= maxEmit))
+
 
 
 # objective function is present value of investment cost minus operating cost savings
@@ -106,13 +94,7 @@ for i in range(0, len(N)):
 		OCl += subl
 
 
-model.OBJ = Objective(expr = sum([(getattr(model, "Hp"+str(i))[i] + getattr(model, "Lp"+str(i))[i])*exp(-r*i) for i in N]) - betah*OCh - betal*OCl)
-
-
-
-
-
-
+model.OBJ = Objective(expr = sum([(getattr(model, "Hp"+str(i)) + getattr(model, "Lp"+str(i)))*exp(-r*i) for i in N]) - betah*OCh - betal*OCl)
 
 
 
