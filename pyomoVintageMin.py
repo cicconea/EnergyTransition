@@ -1,40 +1,31 @@
 from __future__ import division
 from pyomo.environ import *
 from math import exp
-from func_gen import *
+from vintageHelpers import * 
+
+import pdb
 
 
-L0 = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
-H0 = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitting capital 
-	# MW * 1000kW/MW * capacity * $/kW from Fh_0 or Fl_0
 
-alpha = 0.5 # emissions reduction fraction
-betah = 0.4 # fraction of yearly operating costs
-betal = 0.05 # fraction of yearly operating costs
-
-r = 0.05 # interest rate
-
-kWperYearTokWh = 8760.0 # conversion of 1 kW power capacity for 1 year to kWh energy
-
-Fh_0 = 0.0006 * 0.5 * kWperYearTokWh # base high emitting efficiency kW/$ * kWh conversion * capacity factor
-Fh_m = 3*0.5*10**-6 * kWperYearTokWh # linear slope high emitting efficiency * kWh conversion * capacity factor 
-Fl_0 = (1.0/3827.0)*0.3 * kWperYearTokWh # base low emitting efficiency kW/$ * kWh conversion * capacity factor
-Fl_m = 0.01 # linear slope low emitting efficiency
-
-el_0 = 0.0 # base emissions for low-intensity capital in lbs CO2/kWh
-el_m = -0.1 # linear slope emissions for low-intensity capital
-eh_0 = 1.6984 # base emissions for high intensity capital in lbs CO2/kWh
-eh_m = -0.0031 # slope emissions for high-intensity capital
-
-G_0 = 2798.5 * 10**9 # billion kWh electricity demanded
-G_m = 32.238 * 10**9 # annual growth in demand for electricity in billion kWh
-
-period = 3 # simulation length (!= to n)
-treaty = 100 # number of years of treaty length - must be less than period
-n = 20 # depreciation length for high emitting
-#nl = 10 # depreciation length for low emitting
+f = open("mc.txt", "r")
+i = int(f.read())
+f.close()
 
 
+GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, n = genData(i)
+
+print len(GList)
+print len(FlList)
+print len(FhList)
+print len(mlList)
+print len(mhList)
+print period
+
+betah = 0.4
+betal = 0.05
+
+
+pdb.set_trace()
 
 # initialize model
 model = ConcreteModel()
@@ -44,10 +35,12 @@ N = range(0, period)
 # create variables
 # Hp_i is the positive investment in high over all years list of all years
 for i in range(0, period):
-        setattr(model,"Hp"+str(i),Var(N, domain=NonNegativeReals))
-        setattr(model,"Hn"+str(i),Var(N, domain=NonNegativeReals))
-        setattr(model,"Lp"+str(i),Var(N, domain=NonNegativeReals))
-        setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals))
+	setattr(model,"Hp"+str(i),Var(N, domain=NonNegativeReals))
+	setattr(model,"Hn"+str(i),Var(N, domain=NonNegativeReals))
+	setattr(model,"Lp"+str(i),Var(N, domain=NonNegativeReals))
+	setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals))
+
+	print getattr(model, "Hp"+str(i))
 
 
 # this function builds an expression for capital in time t for capital Hp/Hn/Lp/Ln of age i
@@ -78,20 +71,6 @@ model.Lp0Cons = Constraint(expr = model.Lp0[0] == L0)
 model.Ln0Cons = Constraint(expr = model.Ln0[0] == 0)
 
 
-
-# generate power demand over time
-GList = linGen(period, G_0, G_m, minimum = 0.0, maximum = 6.0 *10.0 **12) # energy demand over time
-# generate costs and emissions levels 
-# logistic arguments: (k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1)
-# randomAllowed = True varies scale (rate) of change of the trajectory
-# low emitting efficiency trajectory min is half of base, max is efficiency of natural gas ($917/kW) at 30% capacity
-FlScale, FlList = logistic(period, Fl_0, True, False, scale = 5/100.0, minVal=0.34334988, maxVal=2.8658669) 
-# weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
-FhList = linGen(period, Fh_0, Fh_m, maximum=4.7764449) # high emitting efficiency trajectory 
-# low emitting carbon intensity trajectory - constant
-mlList = consGen(period, el_0)
-# high emitting carbon intensity trajectory - minimum is emission from 100% natural gas.
-mhList = linGen(period, eh_0, eh_m, minimum=1.22) 
 
 # generation constraints
 for t in range(1, period):
