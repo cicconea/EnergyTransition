@@ -2,8 +2,9 @@ from __future__ import division
 from pyomo.environ import *
 from math import exp
 from vintageHelpers import * 
+from pyomo.opt import SolverFactory
 
-
+from six import StringIO, iteritems
 
 f = open("mc.txt", "r")
 i = int(f.read())
@@ -11,11 +12,7 @@ f.close()
 
 
 
-GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, n = genData(i)
-
-betah = 0.4
-betal = 0.05
-
+GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, n, betah, betal = genData(i)
 
 
 # initialize model
@@ -37,7 +34,7 @@ for i in range(0, period):
 # varRange is model.Hp_
 # sum from initial investment period i through existing time period t
 def genKExprsn(pVar, nVar, i, t):
-	K = getattr(model, pVar+str(i)) * exp((i-t)/n) - sum([getattr(model, nVar+str(i))[j] for j in range(i, t+1)])
+	K = getattr(model, pVar+str(i)) * exp((i-t)/n) - sum([getattr(model, nVar+str(i))[j] for j in range(0, t+1)])
 	return K
 
 # can't have values for investments that happen before the year in which they're initialized
@@ -47,9 +44,16 @@ for i in range(0, period):
 			setattr(model, "HnTimeLogic"+str(i)+str(t), Constraint(expr = getattr(model, "Hn"+str(i))[t] == 0))
 			setattr(model, "LnTimeLogic"+str(i)+str(t), Constraint(expr = getattr(model, "Ln"+str(i))[t] == 0))
 
-		# also set all non-negativity constraints for capital
-		setattr(model, "KhNonNeg"+str(i)+"-"+str(t), Constraint(expr = genKExprsn("Hp", "Hn", i, t) >= 0))
-		setattr(model, "KlNonNeg"+str(i)+"-"+str(t), Constraint(expr = genKExprsn("Lp", "Ln", i, t) >= 0))
+
+			# also set all non-negativity constraints for capital
+			#setattr(model, "KhNonNeg"+str(i)+"-"+str(t), Constraint(expr = genKExprsn("Hp", "Hn", i, t) == 0))
+			#setattr(model, "KlNonNeg"+str(i)+"-"+str(t), Constraint(expr = genKExprsn("Lp", "Ln", i, t) == 0))
+
+		elif t>=i:
+			setattr(model, "KhNonNeg"+str(i)+"-"+str(t), Constraint(expr = genKExprsn("Hp", "Hn", i, t) >= 0))
+			setattr(model, "KlNonNeg"+str(i)+"-"+str(t), Constraint(expr = genKExprsn("Lp", "Ln", i, t) >= 0))
+
+
 
 
 #initialize starting points
@@ -94,7 +98,42 @@ for i in range(0, len(N)):
 		OCl += subl
 
 
+
+# objective with operating costs
 model.OBJ = Objective(expr = sum([(getattr(model, "Hp"+str(i)) + getattr(model, "Lp"+str(i)))*exp(-r*i) for i in N]) - betah*OCh - betal*OCl)
+
+# objective without operating costs
+#model.OBJ = Objective(expr = sum([(getattr(model, "Hp"+str(i)) + getattr(model, "Lp"+str(i)))*exp(-r*i) for i in N]), sense=minimize)
+
+
+
+
+
+def getConstraints():
+	constraintDict = {}
+	# Create a solver
+	opt = SolverFactory('glpk')
+
+	# Create a model instance and optimize
+	instance = model.create()
+	results = opt.solve(instance)
+
+	# get the results back into the instance for easy access
+	instance.load(results)
+
+	from pyomo.core import Constraint
+	for c in instance.active_components(Constraint):
+		thing = getattr(instance, c)._data
+		for k,v in iteritems(thing):
+			constraintDict[c] = v.body()
+
+	return constraintDict
+
+
+
+
+
+
 
 
 
