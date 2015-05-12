@@ -11,7 +11,6 @@ def genData(i):
 		# MW * 1000kW/MW * capacity * $/kW from Fh_0 or Fl_0
 
 	gamma = HBase/(HBase + LBase)
-	print gamma
 
 	betah = 0.05 # fraction of yearly operating costs
 	betal = 0.05 # fraction of yearly operating costs
@@ -44,8 +43,8 @@ def genData(i):
 
 	period = 50 # simulation length (!= to n)
 	treaty = 100 # number of years of treaty length - must be less than period
-	n = 30 # depreciation length for high emitting
-	#nl = 10 # depreciation length for low emitting
+	nh = 30 # depreciation length for high emitting
+	nl = 10 # depreciation length for low emitting
 
 
 	# generate efficiency and carbon intensity data
@@ -65,7 +64,7 @@ def genData(i):
 	mhList = linGen(period, eh_0, eh_m, minimum=1.22) # high emitting carbon intensity trajectory
 		# minimum is emission from 100% natural gas.
 
-	return GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, n, betah, betal
+	return GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, nh, nl, betah, betal
 
 
 

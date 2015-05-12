@@ -4,7 +4,7 @@ import seaborn
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib
-from pyomoVintageMin import getConstraints
+from pyomoVintageMin import getConstraints, getVars
 
 
 
@@ -14,9 +14,7 @@ f = open("mc.txt", "r")
 lastCount = int(f.read())
 f.close()
 
-print lastCount
-
-GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, n, betah, betal = genData(lastCount)
+GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, nh, nl, betah, betal = genData(lastCount)
 
 
 
@@ -25,6 +23,9 @@ currentFile = "VintResults/simpleResult.json"
 H, L = getInvestments(currentFile, period)
 
 constraintDict = getConstraints()
+varDict = getVars()
+
+print varDict
 
 
 Kh = []
