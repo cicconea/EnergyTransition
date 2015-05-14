@@ -4,32 +4,56 @@ import seaborn
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib
+from pyomoSimpleMin import simpleModel
 
 
 
+for alpha in range(1,101,10):
+	for i in range(1,101,10):
+		GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl = genDataSimple(i)
+		print i, alpha
+		model = simpleModel(alpha,i)
+		instance = modelSolve(model)
+		constraintDict = getConstraints(instance)
+		varDict = getVars(instance)
 
-# use this file to create the capital and generation values to export in CSV
-count = 1
 
-stillRunning = True
+		H = [H0]
+		L = [L0]
+		for t in range(1, period):
+			H.append(varDict["Hp"][t] - varDict["Hn"][t])
+			L.append(varDict["Lp"][t] - varDict["Ln"][t])
 
-while stillRunning == True:
-	GList, FlList, FhList, mlList, mhList, period, H0, L0, alpha, r, n = genData(int(count))
-	try:
-		currentFile = "FlResults/simpleResult_"+str(count)+".json"
-		H, L = getInvestments(currentFile, period)
 
-		currentFile = "FlResults/constraints_"+str(count)+".txt"
-		kh, kl = getCapital(currentFile)		
+		kh = []
+		kl = []
+		for t in range(1, period+1):
+			try:
+				kh.append(constraintDict["KhNonNeg"+str(t)])
+			except KeyError:
+				kh.append(0)
+
+			try:
+				kl.append(constraintDict["KlNonNeg"+str(t)])
+			except KeyError:
+				kl.append(0)
+
+
+		
 
 		font = {'size'   : 10}
 		matplotlib.rc('font', **font)
 
-		kh = [float(i) for i in kh]
-		kl = [float(i) for i in kl]
+		#kh = [float(i) for i in kh]
+		#kl = [float(i) for i in kl]
 		totalk = [kh[i]+kl[i] for i in range(len(kh))]
+		
+
 		frach = [kh[i]/totalk[i] for i in range(len(kh))]
 		fracl = [kl[i]/totalk[i] for i in range(len(kl))]
+
+
+
 
 		dateRange = range(1, len(H)+1)
 
@@ -79,31 +103,25 @@ while stillRunning == True:
 		ax4.set_ylabel('Billion kWh/year')
 
 
-
-		plt.savefig('FlResults/cap_and_invest_results_Fl_' + str(count) + '.png', bbox_inches='tight')
-		plt.close()
-
-
-		print "done with model "+str(count)
-		count += 1
-
-	except IOError: 
-		stillRunning = False
-	except:
-		stillRunning = False
-		print sys.exc_info()
+		plt.show()
+		#plt.savefig('FlResults/cap_and_invest_results_Fl_' + str(count) + '.png', bbox_inches='tight')
+		#plt.close()
 
 
-cost = []
-for i in range(1, count):
-	cost.append(getOptimalCost("FlResults/simpleResult_"+str(i)+".json"))
+		print "done with model "+str(i)
 
-plt.plot(range(1,count), cost)
-plt.xlabel("Speed of Transition")
-plt.ylabel("Net Present Value Cost - $")
-plt.title("Cost of Transition as a Function of Transition Speed")
-plt.savefig('FlResults/cost_as_func_of_Fl_emissions_' + str(alpha) + '.png', bbox_inches='tight')
-plt.close()
+
+
+#cost = []
+#for i in range(1, count):
+#	cost.append(getOptimalCost("FlResults/simpleResult_"+str(i)+".json"))
+
+#plt.plot(range(1,count), cost)
+#plt.xlabel("Speed of Transition")
+#plt.ylabel("Net Present Value Cost - $")
+#plt.title("Cost of Transition as a Function of Transition Speed")
+#plt.savefig('FlResults/cost_as_func_of_Fl_emissions_' + str(alpha) + '.png', bbox_inches='tight')
+#plt.close()
 
 
 
