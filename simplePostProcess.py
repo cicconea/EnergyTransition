@@ -7,108 +7,109 @@ import matplotlib
 from pyomoSimpleMin import simpleModel
 
 
-
-for alpha in range(1,101,10):
-	for i in range(1,101,10):
-		GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl = genDataSimple(i)
-		print i, alpha
-		model = simpleModel(alpha,i)
-		instance = modelSolve(model)
-		constraintDict = getConstraints(instance)
-		varDict = getVars(instance)
+alphaRange = range(10, 101, 10)
+countRange = [1, 5, 10, 15, 20, 25]
+FlMaxRange = [25.0, 50.0, 75.0, 100.0]
 
 
-		H = [H0]
-		L = [L0]
-		for t in range(1, period):
-			H.append(varDict["Hp"][t] - varDict["Hn"][t])
-			L.append(varDict["Lp"][t] - varDict["Ln"][t])
+for alpha in alphaRange:
+	for count in countRange:
+		for FlMax in FlMaxRange:
+			GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl = genDataSimple(count, FlMax/100.0)
+			print count, alpha, FlMax
+			model = simpleModel(alpha,count, FlMax)
+			instance = modelSolve(model)
+			constraintDict = getConstraints(instance)
+			varDict = getVars(instance)
 
 
-		kh = []
-		kl = []
-		for t in range(1, period+1):
-			try:
-				kh.append(constraintDict["KhNonNeg"+str(t)])
-			except KeyError:
-				kh.append(0)
-
-			try:
-				kl.append(constraintDict["KlNonNeg"+str(t)])
-			except KeyError:
-				kl.append(0)
+			H = [H0]
+			L = [L0]
+			for t in range(1, period):
+				H.append(varDict["Hp"][t] - varDict["Hn"][t])
+				L.append(varDict["Lp"][t] - varDict["Ln"][t])
 
 
-		
+			kh = []
+			kl = []
+			for t in range(1, period+1):
+				try:
+					kh.append(constraintDict["KhNonNeg"+str(t)])
+				except KeyError:
+					kh.append(0)
 
-		font = {'size'   : 10}
-		matplotlib.rc('font', **font)
-
-		#kh = [float(i) for i in kh]
-		#kl = [float(i) for i in kl]
-		totalk = [kh[i]+kl[i] for i in range(len(kh))]
-		
-
-		frach = [kh[i]/totalk[i] for i in range(len(kh))]
-		fracl = [kl[i]/totalk[i] for i in range(len(kl))]
-
-
+				try:
+					kl.append(constraintDict["KlNonNeg"+str(t)])
+				except KeyError:
+					kl.append(0)
 
 
-		dateRange = range(1, len(H)+1)
+			
 
-		genH = [kh[i]*FhList[i+1] for i in range(len(kh))]
-		genL = [kl[i]*FlList[i+1] for i in range(len(kl))]
+			font = {'size'   : 10}
+			matplotlib.rc('font', **font)
+
+			#kh = [float(i) for i in kh]
+			#kl = [float(i) for i in kl]
+			totalk = [kh[i]+kl[i] for i in range(len(kh))]
+			
+
+			frach = [kh[i]/totalk[i] for i in range(len(kh))]
+			fracl = [kl[i]/totalk[i] for i in range(len(kl))]
 
 
 
-		# generate matplotlib plot for investment
-		fig = plt.figure(figsize=(10, 7), dpi=100, facecolor='w', edgecolor='k')
 
-		ax1 = fig.add_subplot(2,2,1)
-		# plot the data
-		ax1.plot(dateRange, H, label= "Dirty Capital Invesment")
-		ax1.plot(dateRange, L, label= "Clean Capital Investment")
+			dateRange = range(1, len(H)+1)
 
-		# labels
-		ax1.set_xlabel('Years of Simulation')
-		ax1.set_ylabel('Investment ($)')
-		ax1.set_title("Investment")
+			genH = [kh[i]*FhList[i+1] for i in range(len(kh))]
+			genL = [kl[i]*FlList[i+1] for i in range(len(kl))]
 
 
-		# generate matplotlib plot for investment
-		ax2 = fig.add_subplot(2,2,3)
-		# plot the data
-		ax2.plot(dateRange, kh, label= "Dirty Capital Stock")
-		ax2.plot(dateRange, kl, label= "Clean Capital Stock")
 
-		# labels
-		ax2.set_xlabel('Years of Simulation')
-		ax2.set_ylabel('Investment ($)')
-		ax2.set_title("$ of Capital")
-		plt.legend(loc = 0)
-		
-		fig.subplots_adjust(hspace=0.5)
+			# generate matplotlib plot for investment
+			fig = plt.figure(figsize=(10, 7), dpi=100, facecolor='w', edgecolor='k')
 
-		ax3 = fig.add_subplot(2,2,2)
-		ax3.stackplot(dateRange, frach, fracl)
-		ax3.set_title("Fractional Capital")
-		ax3.set_xlabel('Years of Simulation')
-		ax3.set_ylabel('Fraction of Capital')
+			ax1 = fig.add_subplot(2,2,1)
+			# plot the data
+			ax1.plot(dateRange, H, label= "Dirty Capital Invesment")
+			ax1.plot(dateRange, L, label= "Clean Capital Investment")
 
-		ax4 = fig.add_subplot(2,2,4)
-		ax4.stackplot(dateRange, genH, genL)
-		ax4.set_title("Total Generating Capacity")
-		ax4.set_xlabel('Years of Simulation')
-		ax4.set_ylabel('Billion kWh/year')
+			# labels
+			ax1.set_xlabel('Years of Simulation')
+			ax1.set_ylabel('Investment ($)')
+			ax1.set_title("Investment")
 
 
-		plt.show()
-		#plt.savefig('FlResults/cap_and_invest_results_Fl_' + str(count) + '.png', bbox_inches='tight')
-		#plt.close()
+			# generate matplotlib plot for investment
+			ax2 = fig.add_subplot(2,2,3)
+			# plot the data
+			ax2.plot(dateRange, kh, label= "Dirty Capital Stock")
+			ax2.plot(dateRange, kl, label= "Clean Capital Stock")
+
+			# labels
+			ax2.set_xlabel('Years of Simulation')
+			ax2.set_ylabel('Investment ($)')
+			ax2.set_title("$ of Capital")
+			plt.legend(loc = 0)
+			
+			fig.subplots_adjust(hspace=0.5)
+
+			ax3 = fig.add_subplot(2,2,2)
+			ax3.stackplot(dateRange, frach, fracl)
+			ax3.set_title("Fractional Capital")
+			ax3.set_xlabel('Years of Simulation')
+			ax3.set_ylabel('Fraction of Capital')
+
+			ax4 = fig.add_subplot(2,2,4)
+			ax4.stackplot(dateRange, genH, genL)
+			ax4.set_title("Total Generating Capacity")
+			ax4.set_xlabel('Years of Simulation')
+			ax4.set_ylabel('Billion kWh/year')
 
 
-		print "done with model "+str(i)
+			plt.savefig('simpleResult/simple_cap_and_invest_results_Fl_' + str(count) + '_alpha_' + str(alpha) + '_FLFrac_' + str(FlMax) + '.png', bbox_inches='tight')
+			plt.close()
 
 
 

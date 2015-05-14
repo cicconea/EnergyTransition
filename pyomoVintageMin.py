@@ -7,11 +7,10 @@ from six import StringIO, iteritems
 
 
 
-def vintageModel(alpha, i):
-	GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl, betah, betal = genDataVint(i)
+def vintageModel(alpha, i, FlFrac):
+	GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl, betah, betal = genDataVint(i, FlFrac/100.0)
 
-	print FlList[40]
-
+	
 
 	# initialize model
 	model = ConcreteModel()

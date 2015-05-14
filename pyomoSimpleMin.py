@@ -5,9 +5,8 @@ from helpers import *
 
 
 
-def simpleModel(alpha, i):
-	GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl = genDataSimple(i)
-
+def simpleModel(alpha, i, FlFrac):
+	GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl = genDataSimple(i, FlFrac/100.0)
 
 	# initialize model
 	model = ConcreteModel()

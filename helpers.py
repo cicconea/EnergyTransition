@@ -7,7 +7,7 @@ from six import StringIO, iteritems
 
 
 
-def genDataVint(i):
+def genDataVint(i, FlFrac):
 	LBase = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
 	HBase = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitting capital 
 		# MW * 1000kW/MW * capacity * $/kW from Fh_0 or Fl_0
@@ -23,13 +23,13 @@ def genDataVint(i):
 	HCap = 0.5
 	LCap = 0.3
 
-	occH = 3500 # $/kW
-	occL = 3700 # $/kW
+	occH = 3500 + 646 # $/kW of overnight capital cost + PV(operating costs over 50 years)
+	occL = 3700 + 260 # $/kW of overnight capital cost + PV(operating costs over 50 years)
 
 	Fh_0 = (1.0/occH) * HCap * kWperYearTokWh # base high emitting efficiency kW/$ * kWh conversion * capacity factor
 	Fh_m = 3*0.5*10**-6 * kWperYearTokWh # linear slope high emitting efficiency * kWh conversion * capacity factor 
 	Fl_0 = (1.0/occL) * LCap * kWperYearTokWh # base low emitting efficiency kW/$ * kWh conversion * capacity factor
-	FlMax = 2.8658669 # max is efficiency of natural gas ($917/kW) at 30% capacity
+	FlMax = (1.0/917.0) * LCap * kWperYearTokWh # max is efficiency of natural gas ($917/kW) at 30% capacity
 
 
 	el_0 = 0.0 # base emissions for low-intensity capital in lbs CO2/kWh
@@ -59,7 +59,7 @@ def genDataVint(i):
 	# randomAllowed = True varies scale (rate) of change of the trajectory
 
 
-	FlScale, FlList = logistic(period, Fl_0, True, False, scale = i/100.0, minVal=0.34334988, maxVal=FlMax) # low emitting efficiency trajectory
+	FlScale, FlList = logistic(period, Fl_0, True, False, scale = i/100.0, minVal=0.34334988, maxVal=FlFrac*FlMax) # low emitting efficiency trajectory
 		# min is half of base, max is efficiency of natural gas ($917/kW) at 30% capacity
 	FhList = linGen(period, Fh_0, Fh_m, maximum=4.7764449) # high emitting efficiency trajectory 
 		# weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
@@ -72,7 +72,7 @@ def genDataVint(i):
 	return GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl, betah, betal
 
 
-def genDataSimple(i):
+def genDataSimple(i, FlFrac):
 	LBase = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
 	HBase = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitting capital 
 		# MW * 1000kW/MW * capacity * $/kW from Fh_0 or Fl_0
@@ -94,7 +94,7 @@ def genDataSimple(i):
 	Fh_0 = (1.0/occH) * HCap * kWperYearTokWh # base high emitting efficiency kW/$ * kWh conversion * capacity factor
 	Fh_m = 3*0.5*10**-6 * kWperYearTokWh # linear slope high emitting efficiency * kWh conversion * capacity factor 
 	Fl_0 = (1.0/occL) * LCap * kWperYearTokWh # base low emitting efficiency kW/$ * kWh conversion * capacity factor
-	FlMax = 2.8658669 # max is efficiency of natural gas ($917/kW) at 30% capacity
+	FlMax = (1.0/917.0) * LCap * kWperYearTokWh # max is efficiency of natural gas ($917/kW) at 30% capacity
 
 
 	el_0 = 0.0 # base emissions for low-intensity capital in lbs CO2/kWh
@@ -124,7 +124,7 @@ def genDataSimple(i):
 
 	FlMax = 2.8658669 #max is efficiency of natural gas ($917/kW) at 30% capacity
 
-	FlScale, FlList = logistic(period+1, Fl_0, True, False, scale = i/100.0, minVal=0.34334988, maxVal=FlMax) # low emitting efficiency trajectory
+	FlScale, FlList = logistic(period+1, Fl_0, True, False, scale = i/100.0, minVal=0.34334988, maxVal=FlFrac * FlMax) # low emitting efficiency trajectory
 		# min is half of base, max is efficiency of natural gas ($917/kW) at 30% capacity
 	FhList = linGen(period+1, Fh_0, Fh_m, maximum=4.7764449) # high emitting efficiency trajectory 
 		# weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
@@ -225,7 +225,6 @@ def modelSolve(model):
 	# Create a model instance and optimize
 	instance = model.create()
 	results = opt.solve(instance)
-
 	# get the results back into the instance for easy access
 	instance.load(results)
 	return instance
