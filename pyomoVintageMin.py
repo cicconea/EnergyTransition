@@ -8,9 +8,9 @@ from six import StringIO, iteritems
 
 
 def vintageModel(alpha, i, FlFrac):
-	GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl, betah, betal = genDataVint(i, FlFrac/100.0)
+	GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl, betah, betal = genDataVint(i, FlFrac)
 
-	
+
 
 	# initialize model
 	model = ConcreteModel()
@@ -71,7 +71,7 @@ def vintageModel(alpha, i, FlFrac):
 		for i in range(0, t+1):
 			emit += mhList[i]*FhList[i]*genKExprsn("Hp", "Hn", i, t) + mlList[i] * FlList[i]*genKExprsn("Lp", "Ln", i, t)
 
-	maxEmit = alpha * sum([mhList[i]*FhList[i]*H0 + mlList[i]*FlList[i]*L0 for i in N])
+	maxEmit = float(alpha) * sum([mhList[i]*FhList[i]*H0 + mlList[i]*FlList[i]*L0 for i in N])
 	setattr(model, "emissions", Constraint(expr = emit <= maxEmit))
 
 

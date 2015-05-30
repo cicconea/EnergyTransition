@@ -30,6 +30,8 @@ def consGen(k, base):
 def logistic(k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1):
 	returnList = [initial]	
 
+	#print maxVal
+
 	if randomAllowed == True:
 		scale = truncGaussian(scale, 0, 5)
 	
@@ -39,6 +41,11 @@ def logistic(k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxV
 		for i in range(1, k):
 			dpdt = scale*priorY*(1-(priorY/diff))
 			appendY = dpdt + priorY
+			if appendY + minVal > maxVal:
+				appendY = maxVal-minVal
+			if appendY + minVal < initial:
+				appendY = initial-minVal
+
 			returnList.append(appendY + minVal)
 			priorY = appendY        
 

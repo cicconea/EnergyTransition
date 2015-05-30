@@ -8,16 +8,23 @@ from pyomoVintageMin import vintageModel
 from pyomo.core.base import objective
 
 
-alphaRange = range(10, 101, 10)
-countRange = [1, 5, 10, 15, 20, 25]
-FlMaxRange = [25.0, 50.0, 75.0, 100.0]
+alphaRange = range(25, 101, 25) # % emissions reduction
+countRange = [1, 5, 10, 15] # scale of transition
+FlMaxRange = range(25, 101, 25) # % of max emissions can't be lower that 25%
+
 
 for alpha in alphaRange:
+	alpha = alpha/100.0
 	for count in countRange:
 		for FlMax in FlMaxRange:
-			GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl, betah, betal = genDataVint(count, FlMax/100.0)
-			print
-			print count, alpha, FlMax
+			FlMax = FlMax/100.0
+			print "Vintage ", count, alpha, FlMax
+
+			GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl, betah, betal = genDataVint(count, FlMax)
+			
+			print FlList
+
+
 			model = vintageModel(alpha, count, FlMax)
 			instance = modelSolve(model)
 			constraintDict = getConstraints(instance)
@@ -36,10 +43,12 @@ for alpha in alphaRange:
 						Htemp.append(varDict["Hp"+str(i)][0])
 						Ltemp.append(varDict["Lp"+str(i)][0])
 					elif t > i:
-						Htemp.append(varDict["Hn"+str(i)][t])
-						Ltemp.append(varDict["Ln"+str(i)][t])
+						Htemp.append(-varDict["Hn"+str(i)][t])
+						Ltemp.append(-varDict["Ln"+str(i)][t])
 				H.append(Htemp)
 				L.append(Ltemp)
+
+
 
 
 
@@ -64,13 +73,13 @@ for alpha in alphaRange:
 
 
 			# generate matplotlib plot for investment
-			fig = plt.figure(figsize=(10, 7), dpi=100, facecolor='w', edgecolor='k')
+			fig = plt.figure(figsize=(15, 10), dpi=100, facecolor='w', edgecolor='k')
 			fig.subplots_adjust(hspace=0.5)
 
-			ax1 = fig.add_subplot(2,2,1)
-			ax2 = fig.add_subplot(2,2,2)
-			ax3 = fig.add_subplot(2,2,3)
-			ax4 = fig.add_subplot(2,2,4)
+			ax1 = fig.add_subplot(2,3,1)
+			ax2 = fig.add_subplot(2,3,2)
+			ax3 = fig.add_subplot(2,3,3)
+			ax4 = fig.add_subplot(2,3,4)
 
 
 			# plot the data
@@ -103,11 +112,6 @@ for alpha in alphaRange:
 			ax4.set_title("Low Emitting Capital")
 
 
-			plt.savefig('VintResults/vint_cap_and_invest_results_Fl_' + str(count) + '_alpha_' + str(alpha)+ '_FLFrac_' + str(FlMax)+'.png', bbox_inches='tight')
-			plt.close()
-
-
-
 			totalKh = []
 			totalKl = []
 			totalGh = []
@@ -125,25 +129,30 @@ for alpha in alphaRange:
 				totalGl.append(totalGlInst)
 
 
-			fig = plt.figure(figsize=(10, 7), dpi=100, facecolor='w', edgecolor='k')
-			fig.subplots_adjust(hspace=0.5)
+			ax5 = fig.add_subplot(2,3,5)
+			ax6 = fig.add_subplot(2,3,6)
 
-			ax1 = fig.add_subplot(1,2,1)
-			ax2 = fig.add_subplot(1,2,2)
+			ax6.plot(range(period), totalKh, label = "High Emitting Capital")
+			ax6.plot(range(period), totalKl, label = "Low Emitting Capital")
 
-			ax1.stackplot(range(period), totalKh, totalKl)
-			ax2.stackplot(range(period), totalGh, totalGl)
+			ax5.stackplot(range(period), totalGh, totalGl)
+			#ax3.plot(range(period), FhList, label = "High Emitting Cost")
+			#ax3.plot(range(period), FlList, label = "Low Emitting Cost")
 
-			ax1.set_xlabel('Years of Simulation')
-			ax1.set_ylabel('Total Capital ($)')
-			ax1.set_title("Total Capital")
+			ax6.set_xlabel('Years of Simulation')
+			ax6.set_ylabel('Total Capital ($)')
+			ax6.legend(loc=0)
+			ax6.set_title("Total Capital")
 
-			ax2.set_title("Total Generating Capacity")
-			ax2.set_xlabel('Years of Simulation')
-			ax2.set_ylabel('Billion kWh/year')
+			ax5.set_title("Total Generating Capacity")
+			ax5.set_xlabel('Years of Simulation')
+			ax5.set_ylabel('Billion kWh per Year')
 
+			#ax3.set_title("Cost Forecast")
+			#ax3.set_xlabel('Years of Simulation')
+			#ax3.set_ylabel('kWh/year per $')
 
-			plt.savefig('VintResults/vint_gen_results_Fl_' + str(count) + '_alpha_' + str(alpha)+'_FLFrac_' + str(FlMax)+'.png', bbox_inches='tight')
+			plt.savefig('VintResults/vint_cap_and_invest_results_Fl_' + str(count) + '_alpha_' + str(alpha)+ '_FLFrac_' + str(FlMax)+'.png', bbox_inches='tight')
 			plt.close()
 
 

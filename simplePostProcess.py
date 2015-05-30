@@ -7,17 +7,19 @@ import matplotlib
 from pyomoSimpleMin import simpleModel
 
 
-alphaRange = range(10, 101, 10)
-countRange = [1, 5, 10, 15, 20, 25]
-FlMaxRange = [25.0, 50.0, 75.0, 100.0]
+alphaRange = range(25, 101, 25) # % emissions reduction
+countRange = [1, 5, 10, 15, 20, 25] # scale of transition
+FlMaxRange = range(25, 101, 25) # % of max emissions
+
 
 
 for alpha in alphaRange:
 	for count in countRange:
 		for FlMax in FlMaxRange:
+			print "Simple ", count, alpha, FlMax
+
 			GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl = genDataSimple(count, FlMax/100.0)
-			print count, alpha, FlMax
-			model = simpleModel(alpha,count, FlMax)
+			model = simpleModel(float(alpha)/100.0,count, FlMax)
 			instance = modelSolve(model)
 			constraintDict = getConstraints(instance)
 			varDict = getVars(instance)
@@ -105,7 +107,7 @@ for alpha in alphaRange:
 			ax4.stackplot(dateRange, genH, genL)
 			ax4.set_title("Total Generating Capacity")
 			ax4.set_xlabel('Years of Simulation')
-			ax4.set_ylabel('Billion kWh/year')
+			ax4.set_ylabel('Billion kWh per Year')
 
 
 			plt.savefig('simpleResult/simple_cap_and_invest_results_Fl_' + str(count) + '_alpha_' + str(alpha) + '_FLFrac_' + str(FlMax) + '.png', bbox_inches='tight')

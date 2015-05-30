@@ -26,19 +26,42 @@ def genDataVint(i, FlFrac):
 	occH = 3500 + 646 # $/kW of overnight capital cost + PV(operating costs over 50 years)
 	occL = 3700 + 260 # $/kW of overnight capital cost + PV(operating costs over 50 years)
 
-	Fh_0 = (1.0/occH) * HCap * kWperYearTokWh # base high emitting efficiency kW/$ * kWh conversion * capacity factor
-	Fh_m = 3*0.5*10**-6 * kWperYearTokWh # linear slope high emitting efficiency * kWh conversion * capacity factor 
-	Fl_0 = (1.0/occL) * LCap * kWperYearTokWh # base low emitting efficiency kW/$ * kWh conversion * capacity factor
-	FlMax = (1.0/917.0) * LCap * kWperYearTokWh # max is efficiency of natural gas ($917/kW) at 30% capacity
-
 
 	el_0 = 0.0 # base emissions for low-intensity capital in lbs CO2/kWh
 	el_m = -0.1 # linear slope emissions for low-intensity capital
 	eh_0 = 1.6984 # base emissions for high intensity capital in lbs CO2/kWh
 	eh_m = -0.0031 # slope emissions for high-intensity capital
 
+	period = 50 # simulation length (!= to n)
+	nh = 30 # depreciation length for high emitting
+	nl = 10 # depreciation length for low emitting
+
+
+
+	# Version in kWh
+	Fh_0 = (1.0/occH) * HCap * kWperYearTokWh # base high emitting efficiency kW/$ * kWh conversion * capacity factor
+	Fh_m = 3*0.5*10**-6 * kWperYearTokWh # linear slope high emitting efficiency * kWh conversion * capacity factor 
+	Fl_0 = (1.0/occL) * LCap * kWperYearTokWh # base low emitting efficiency kW/$ * kWh conversion * capacity factor
+	FlMax = (1.0/917.0) * LCap * kWperYearTokWh # max is efficiency of natural gas ($917/kW) at 30% capacity
+
+
+
+
 	G_0 = 2843.3 * 10**9 # billion kWh electricity demanded
 	G_m = 32.2 * 10**9 # annual growth in demand for electricity in billion kWh
+
+
+
+	# Version in W
+	#Fh_0 = (1.0/occH) * HCap * 1000 # base high emitting efficiency kW/$ * kW > W conversion * capacity factor
+	#Fh_m = 3*0.5*10**-6 * 1000 * HCap # linear slope high emitting efficiency * kW > W conversion * capacity factor 
+	#Fl_0 = (1.0/occL) * 1000 * LCap # base low emitting efficiency kW/$ * kW > W conversion * capacity factor
+	#FlMax = (1.0/917.0) * 1000 * LCap  # max is efficiency of natural gas ($0.917/W) at 30% capacity
+
+	#G_0 = 2843.3 * 10**9 * 0.11 # in W instead of kWh
+	#G_m = 32.2 * 10**9 * 0.11 # in W instead of kWh
+
+
 
 
 	# adjusted initial amounts preserving initial capital stock ratio
@@ -48,9 +71,6 @@ def genDataVint(i, FlFrac):
 
 
 
-	period = 50 # simulation length (!= to n)
-	nh = 30 # depreciation length for high emitting
-	nl = 10 # depreciation length for low emitting
 
 
 	# generate efficiency and carbon intensity data
