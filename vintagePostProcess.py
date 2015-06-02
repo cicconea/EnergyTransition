@@ -8,9 +8,9 @@ from pyomoVintageMin import vintageModel
 from pyomo.core.base import objective
 
 
-alphaRange = range(25, 101, 25) # % emissions reduction
-countRange = [1, 5, 10, 15] # scale of transition
-FlMaxRange = range(25, 101, 25) # % of max emissions can't be lower that 25%
+alphaRange = range(25, 76, 25) # % emissions reduction
+countRange = [5, 10, 15] # scale of transition
+FlMaxRange = range(50, 101, 50) # % of max emissions can't be lower that 25%
 
 
 for alpha in alphaRange:
@@ -22,7 +22,6 @@ for alpha in alphaRange:
 
 			GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl, betah, betal = genDataVint(count, FlMax)
 			
-			print FlList
 
 
 			model = vintageModel(alpha, count, FlMax)
@@ -80,17 +79,18 @@ for alpha in alphaRange:
 			ax2 = fig.add_subplot(2,3,2)
 			ax3 = fig.add_subplot(2,3,3)
 			ax4 = fig.add_subplot(2,3,4)
-
+			ax5 = fig.add_subplot(2,3,5)
+			ax6 = fig.add_subplot(2,3,6)
 
 			# plot the data
 			for i in range(period):
 				dateRange = range(i, len(H[0]))
 				ax1.plot(dateRange, H[i], label= "H Vintage: "+str(i))
-				ax3.plot(dateRange, L[i], label= "L Vintage: "+str(i))
+				ax4.plot(dateRange, L[i], label= "L Vintage: "+str(i))
 
 			years = range(period)
 			ax2.stackplot(years, Kh)
-			ax4.stackplot(years, Kl)
+			ax5.stackplot(years, Kl)
 
 
 
@@ -103,13 +103,13 @@ for alpha in alphaRange:
 			ax2.set_ylabel('Capital ($)')
 			ax2.set_title("High Emitting Capital")
 					
-			ax3.set_xlabel('Years of Simulation')
-			ax3.set_ylabel('Capital ($)')
-			ax3.set_title("Low Emitting Investments")
-
 			ax4.set_xlabel('Years of Simulation')
 			ax4.set_ylabel('Capital ($)')
-			ax4.set_title("Low Emitting Capital")
+			ax4.set_title("Low Emitting Investments")
+
+			ax5.set_xlabel('Years of Simulation')
+			ax5.set_ylabel('Capital ($)')
+			ax5.set_title("Low Emitting Capital")
 
 
 			totalKh = []
@@ -129,24 +129,22 @@ for alpha in alphaRange:
 				totalGl.append(totalGlInst)
 
 
-			ax5 = fig.add_subplot(2,3,5)
-			ax6 = fig.add_subplot(2,3,6)
 
-			ax6.plot(range(period), totalKh, label = "High Emitting Capital")
-			ax6.plot(range(period), totalKl, label = "Low Emitting Capital")
+			ax3.plot(range(period), totalKh, label = "High Emitting Capital")
+			ax3.plot(range(period), totalKl, label = "Low Emitting Capital")
 
-			ax5.stackplot(range(period), totalGh, totalGl)
+			ax6.stackplot(range(period), totalGh, totalGl)
 			#ax3.plot(range(period), FhList, label = "High Emitting Cost")
 			#ax3.plot(range(period), FlList, label = "Low Emitting Cost")
 
-			ax6.set_xlabel('Years of Simulation')
-			ax6.set_ylabel('Total Capital ($)')
-			ax6.legend(loc=0)
-			ax6.set_title("Total Capital")
+			ax3.set_xlabel('Years of Simulation')
+			ax3.set_ylabel('Total Capital ($)')
+			ax3.legend(loc=0)
+			ax3.set_title("Total Capital")
 
-			ax5.set_title("Total Generating Capacity")
-			ax5.set_xlabel('Years of Simulation')
-			ax5.set_ylabel('Billion kWh per Year')
+			ax6.set_title("Total Generating Capacity")
+			ax6.set_xlabel('Years of Simulation')
+			ax6.set_ylabel('Billion kWh per Year')
 
 			#ax3.set_title("Cost Forecast")
 			#ax3.set_xlabel('Years of Simulation')

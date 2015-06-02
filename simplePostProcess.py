@@ -7,9 +7,9 @@ import matplotlib
 from pyomoSimpleMin import simpleModel
 
 
-alphaRange = range(25, 101, 25) # % emissions reduction
-countRange = [1, 5, 10, 15, 20, 25] # scale of transition
-FlMaxRange = range(25, 101, 25) # % of max emissions
+alphaRange = range(25, 76, 25) # % emissions reduction
+countRange = [5, 10, 15] # scale of transition
+FlMaxRange = range(50, 101, 50) # % of max emissions can't be lower that 25%
 
 
 
