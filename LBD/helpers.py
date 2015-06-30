@@ -122,7 +122,7 @@ def genDataSimple():
 	SimpleDict["G_0"] = 2843.3 * 10**9 # billion kWh electricity demanded
 	SimpleDict["G_m"] = 32.2 * 10**9 # annual growth in demand for electricity in billion kWh
 
-	SimpleDict["period"] = 5 # simulation length (!= to n)
+	SimpleDict["period"] = 50 # simulation length (!= to n)
 	SimpleDict["nh"] = 30 # depreciation length for high emitting
 	SimpleDict["nl"] = 10 # depreciation length for low emitting
 
@@ -151,7 +151,9 @@ def genDataSimple():
 
 	SimpleDict["FhList"] = linGen(SimpleDict["period"]+1, SimpleDict["Fh_0"], SimpleDict["Fh_m"], maximum=4.7764449) # high emitting efficiency trajectory 
 		# weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
-		
+
+	#SimpleDict["FhList"] = consGen(SimpleDict["period"]+1, SimpleDict["Fh_0"])
+
 	SimpleDict["mlList"] = consGen(SimpleDict["period"]+1, SimpleDict["el_0"]) # low emitting carbon intensity trajectory
 		# constant 
 	SimpleDict["mhList"] = linGen(SimpleDict["period"]+1, SimpleDict["eh_0"], SimpleDict["eh_m"], minimum=1.22) # high emitting carbon intensity trajectory
