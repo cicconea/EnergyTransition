@@ -1,7 +1,7 @@
 from func_gen import *
 import re
 import json
-from pyomo.opt import SolverFactory
+from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
 from six import StringIO, iteritems
 
 
@@ -193,6 +193,13 @@ def NLmodelSolve(model):
 
 	# load the results (including any values for previously declared
 	instance.load(results)
+
+	if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
+		print "Model feasible and optimal"
+	elif (results.solver.termination_condition == TerminationCondition.infeasible):
+		print "Model infeasible"
+	else:
+		print "Solver Status: ",  result.solver.status
 
 	return instance
 

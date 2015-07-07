@@ -1,10 +1,10 @@
 import sys
-from helpers import *
+from LBDhelpers import *
 import seaborn
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib
-from pyomoSimpleMin import simpleModel
+from LBDpyomoSimpleMin import simpleModel
 
 
 
@@ -19,7 +19,7 @@ print "Constructed model"
 
 instance = NLmodelSolve(model)
 
-print "Solved model"
+print "Generating graphs"
 
 
 constraintDict = getConstraints(instance)
