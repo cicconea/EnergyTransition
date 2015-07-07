@@ -8,19 +8,18 @@ from pyomoSimpleMin import simpleModel
 
 
 
-
-params = genDataSimple()
+params = genData()
 params["alpha"] = 0.5
 
-print "imported parameters successfully"
+print "Imported parameters successfully"
 
 model = simpleModel(params)
 
-print "constructed model"
+print "Constructed model"
 
-instance = modelSolve(model)
+instance = NLmodelSolve(model)
 
-print "solved model"
+print "Solved model"
 
 
 constraintDict = getConstraints(instance)

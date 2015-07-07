@@ -8,6 +8,9 @@ from six import StringIO, iteritems
 
 
 def genDataVint(i, FlFrac):
+
+
+
 	LBase = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
 	HBase = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitting capital 
 		# MW * 1000kW/MW * capacity * $/kW from Fh_0 or Fl_0
@@ -32,7 +35,7 @@ def genDataVint(i, FlFrac):
 	eh_0 = 1.6984 # base emissions for high intensity capital in lbs CO2/kWh
 	eh_m = -0.0031 # slope emissions for high-intensity capital
 
-	period = 50 # simulation length (!= to n)
+	period = 5 # simulation length (!= to n)
 	nh = 30 # depreciation length for high emitting
 	nl = 10 # depreciation length for low emitting
 
@@ -92,166 +95,105 @@ def genDataVint(i, FlFrac):
 	return GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl, betah, betal
 
 
-def genDataSimple():
+def genData():
 
-	SimpleDict = {}
+	params = {}
 
-	SimpleDict["LBase"] = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
-	SimpleDict["HBase"] = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitting capital 
+	# Learning by Doing Parameters
+	params["k"] = 1 # Turning on Learning by doing k = 1, otherwise no LBD k=0
+	params["autonomousTech"] = 0.005 # autonomous rate of tech progress - rate of F without LBD
+	params["M"] = 0.0022
+	params["LBDgamma"] = 0.5
+	params["phi"] = 0.5
+
+
+
+	params["LBase"] = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
+	params["HBase"] = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitting capital 
 		# MW * 1000kW/MW * capacity * $/kW from Fh_0 or Fl_0
 
-	SimpleDict["gamma"] = SimpleDict["HBase"]/(SimpleDict["HBase"] + SimpleDict["LBase"])
+	params["gamma"] = params["HBase"]/(params["HBase"] + params["LBase"])
 
-	SimpleDict["betah"] = 0.0096 # fraction of yearly operating costs
-	SimpleDict["betah"] = 0.0076 # fraction of yearly operating costs
-
-
-	SimpleDict["r"] = 0.05 # interest rate
-	SimpleDict["kWperYearTokWh"] = 8760.0 # conversion of 1 kW power capacity for 1 year to kWh energy
-	SimpleDict["HCap"] = 0.5 
-	SimpleDict["LCap"] = 0.3
-
-	SimpleDict["occH"] = 3500 # $/kWh
-	SimpleDict["occL"] = 3700 # $/kWh
-
-	SimpleDict["el_0"] = 0.0 # base emissions for low-intensity capital in lbs CO2/kWh
-	SimpleDict["el_m"] = -0.1 # linear slope emissions for low-intensity capital
-	SimpleDict["eh_0"] = 1.6984 # base emissions for high intensity capital in lbs CO2/kWh
-	SimpleDict["eh_m"] = -0.0031 # slope emissions for high-intensity capital
-
-	SimpleDict["G_0"] = 2843.3 * 10**9 # billion kWh electricity demanded
-	SimpleDict["G_m"] = 32.2 * 10**9 # annual growth in demand for electricity in billion kWh
-
-	SimpleDict["period"] = 50 # simulation length (!= to n)
-	SimpleDict["nh"] = 30 # depreciation length for high emitting
-	SimpleDict["nl"] = 10 # depreciation length for low emitting
+	params["betah"] = 0.0096 # fraction of yearly operating costs
+	params["betal"] = 0.0076 # fraction of yearly operating costs
 
 
-	SimpleDict["Fh_0"] = (1.0/SimpleDict["occH"]) * SimpleDict["HCap"] * SimpleDict["kWperYearTokWh"] # base high emitting efficiency kW/$ * kWh conversion * capacity factor
-	SimpleDict["Fh_m"] = 3*0.5*10**-6 * SimpleDict["kWperYearTokWh"] # linear slope high emitting efficiency * kWh conversion * capacity factor 
-	SimpleDict["Fl_0"] = (1.0/SimpleDict["occL"]) * SimpleDict["LCap"] * SimpleDict["kWperYearTokWh"] # base low emitting efficiency kW/$ * kWh conversion * capacity factor
-	SimpleDict["FlMax"] = (1.0/917.0) * SimpleDict["LCap"] * SimpleDict["kWperYearTokWh"] # max is efficiency of natural gas ($917/kW) at 30% capacity
+	params["r"] = 0.05 # interest rate
+	params["kWperYearTokWh"] = 8760.0 # conversion of 1 kW power capacity for 1 year to kWh energy
+	params["HCap"] = 0.5 
+	params["LCap"] = 0.3
+
+	params["occH"] = 3500 # $/kWh
+	params["occL"] = 3700 # $/kWh
+
+	params["el_0"] = 0.0 # base emissions for low-intensity capital in lbs CO2/kWh
+	params["el_m"] = -0.1 # linear slope emissions for low-intensity capital
+	params["eh_0"] = 1.6984 # base emissions for high intensity capital in lbs CO2/kWh
+	params["eh_m"] = -0.0031 # slope emissions for high-intensity capital
+
+	params["G_0"] = 2843.3 * 10**9 # billion kWh electricity demanded
+	params["G_m"] = 32.2 * 10**9 # annual growth in demand for electricity in billion kWh
+
+	params["period"] = 5 # simulation length (!= to n)
+	params["nh"] = 30 # depreciation length for high emitting
+	params["nl"] = 10 # depreciation length for low emitting
+
+
+	params["Fh_0"] = (1.0/params["occH"]) * params["HCap"] * params["kWperYearTokWh"] # base high emitting efficiency kW/$ * kWh conversion * capacity factor
+	params["Fh_m"] = 3*0.5*10**-6 * params["kWperYearTokWh"] # linear slope high emitting efficiency * kWh conversion * capacity factor 
+	params["Fl_0"] = (1.0/params["occL"]) * params["LCap"] * params["kWperYearTokWh"] # base low emitting efficiency kW/$ * kWh conversion * capacity factor
+	params["FlMax"] = (1.0/917.0) * params["LCap"] * params["kWperYearTokWh"] # max is efficiency of natural gas ($917/kW) at 30% capacity
 
 
 
 
 	# adjusted initial amounts preserving initial capital stock ratio
 	# but taking in to account current costs to avoid weird first-period issues
-	SimpleDict["H0"] = SimpleDict["G_0"]/(SimpleDict["Fh_0"] + SimpleDict["Fl_0"]*(1-SimpleDict["gamma"])/SimpleDict["gamma"])
-	SimpleDict["L0"] = (SimpleDict["G_0"] - SimpleDict["Fh_0"]*SimpleDict["H0"])/SimpleDict["Fl_0"]
+	params["H0"] = params["G_0"]/(params["Fh_0"] + params["Fl_0"]*(1-params["gamma"])/params["gamma"])
+	params["L0"] = (params["G_0"] - params["Fh_0"]*params["H0"])/params["Fl_0"]
 
 
 
 
 	# generate efficiency and carbon intensity data
-	SimpleDict["GList"] = linGen(SimpleDict["period"] + 1, SimpleDict["G_0"], SimpleDict["G_m"], minimum = 0.0, maximum = 6.0 *10.0 **12) # energy demand over time
+	params["GList"] = linGen(params["period"] + 1, params["G_0"], params["G_m"], minimum = 0.0, maximum = 6.0 *10.0 **12) # energy demand over time
 	# logistic arguments: (k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1)
 	# randomAllowed = True varies scale (rate) of change of the trajectory
 
 
-	SimpleDict["FhList"] = linGen(SimpleDict["period"]+1, SimpleDict["Fh_0"], SimpleDict["Fh_m"], maximum=4.7764449) # high emitting efficiency trajectory 
+	params["FhList"] = linGen(params["period"]+1, params["Fh_0"], params["Fh_m"], maximum=4.7764449) # high emitting efficiency trajectory 
 		# weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
 
-	#SimpleDict["FhList"] = consGen(SimpleDict["period"]+1, SimpleDict["Fh_0"])
+	#params["FhList"] = consGen(params["period"]+1, params["Fh_0"])
 
-	SimpleDict["mlList"] = consGen(SimpleDict["period"]+1, SimpleDict["el_0"]) # low emitting carbon intensity trajectory
+	params["mlList"] = consGen(params["period"]+1, params["el_0"]) # low emitting carbon intensity trajectory
 		# constant 
-	SimpleDict["mhList"] = linGen(SimpleDict["period"]+1, SimpleDict["eh_0"], SimpleDict["eh_m"], minimum=1.22) # high emitting carbon intensity trajectory
+	params["mhList"] = linGen(params["period"]+1, params["eh_0"], params["eh_m"], minimum=1.22) # high emitting carbon intensity trajectory
 		# minimum is emission from 100% natural gas.
 
-	return SimpleDict
+	return params
 
 
 
 
 
+def NLmodelSolve(model):
+	### Create the ipopt solver plugin using the ASL interface
+	solver = 'asl:ipopt'
+	solver_io = 'nl'
+	stream_solver = False    # True prints solver output to screen
+	keepfiles =     False    # True prints intermediate file names (.nl,.sol,...)
+	opt = SolverFactory(solver,solver_io=solver_io)
 
+	### Send the model to ipopt and collect the solution
 
-
-
-
-
-def getCapital(filename):
-	with open(filename) as f:
-		data = f.read()
-		f.close()
-
-	constraintList = re.split(r'None\n--\n', data)
-	constraintList = [re.sub(r'\n', ' ', item) for item in constraintList ]
-
-	kh = []
-	kl = []
-
-	for constraint in constraintList:
-		constraints = constraint.split(":")
-
-		if re.search("KlNonNeg", constraints[0]) is not None:
-			kl.append(constraints[3])
-		elif re.search("KhNonNeg", constraints[0]) is not None:
-			kh.append(constraints[3])
-
-
-	return kh, kl
-
-
-def getInvestments(filename, period):
-		with open(filename) as json_data:
-			data = json.load(json_data)
-			json_data.close()
-		
-		Hp = []
-		Hn = []
-		Lp = []
-		Ln = []
-
-		#create lists of investments
-		for j in range(1, period+1):
-
-			try: HpVal = data["Solution"][1]["Variable"]["Hp["+str(j)+"]"]["Value"]
-			except KeyError: HpVal = 0
-
-			try: HnVal = data["Solution"][1]["Variable"]["Hn["+str(j)+"]"]["Value"]
-			except KeyError: HnVal = 0
-
-			try: LpVal = data["Solution"][1]["Variable"]["Lp["+str(j)+"]"]["Value"]
-			except KeyError: LpVal = 0
-
-			try: LnVal = data["Solution"][1]["Variable"]["Ln["+str(j)+"]"]["Value"]
-			except KeyError: LnVal = 0
-
-
-			Hp.append(HpVal)
-			Hn.append(HnVal)
-			Lp.append(LpVal)
-			Ln.append(LnVal)
-
-		Hinvest = result = [x - y for x, y in zip(Hp, Hn)]
-		Linvest = result = [x - y for x, y in zip(Lp, Ln)]
-
-
-		return Hinvest, Linvest
-
-
-
-def getOptimalCost(filename):
-		with open(filename) as json_data:
-			data = json.load(json_data)
-			json_data.close()
-		
-		try: cost = data["Solution"][1]["Objective"]["OBJ"]["Value"]
-		except KeyError: cost = 0
-
-		return cost
-
-
-def modelSolve(model):
-	opt = SolverFactory('glpk')
-
-	# Create a model instance and optimize
+	print "Solving the Model"
 	instance = model.create()
 	results = opt.solve(instance)
-	# get the results back into the instance for easy access
+
+	# load the results (including any values for previously declared
 	instance.load(results)
+
 	return instance
 
 
