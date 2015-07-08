@@ -7,9 +7,9 @@ import matplotlib
 from pyomoSimpleMin import simpleModel
 
 
-alphaRange = range(25, 76, 25) # % emissions reduction
-countRange = [5, 10, 15] # scale of transition
-FlMaxRange = range(50, 101, 50) # % of max emissions can't be lower that 25%
+alphaRange = [50] # % emissions reduction
+countRange = [10] # scale of transition
+FlMaxRange = [100] # % of max emissions can't be lower that 25%
 
 
 
@@ -109,8 +109,8 @@ for alpha in alphaRange:
 			ax4.set_xlabel('Years of Simulation')
 			ax4.set_ylabel('Billion kWh per Year')
 
-
-			plt.savefig('simpleResult/simple_cap_and_invest_results_Fl_' + str(count) + '_alpha_' + str(alpha) + '_FLFrac_' + str(FlMax) + '.png', bbox_inches='tight')
+			plt.show()
+			#plt.savefig('simpleResult/simple_cap_and_invest_results_Fl_' + str(count) + '_alpha_' + str(alpha) + '_FLFrac_' + str(FlMax) + '.png', bbox_inches='tight')
 			plt.close()
 
 

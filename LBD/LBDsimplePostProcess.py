@@ -7,25 +7,32 @@ import matplotlib
 from LBDpyomoSimpleMin import simpleModel
 
 
+'''
+This module should be called from the command line to set up all parameters,
+create the model, solve and plot the results. 
+'''
 
+# generate the parameter data from the LBDhelpers module.
 params = genData()
-params["alpha"] = 0.5
-
 print "Imported parameters successfully"
 
+# Create the model
 model = simpleModel(params)
-
 print "Constructed model"
 
+# Solve the model
 instance = NLmodelSolve(model)
 
-print "Generating graphs"
-
-
+# Get solution and constraint values
 constraintDict = getConstraints(instance)
 varDict = getVars(instance)
 
 
+
+print "Generating graphs"
+
+# from the variable dictionary, put net investments in to a list
+# postive investments - negative investments
 H = [params["H0"]]
 L = [params["L0"]]
 for t in range(1, params["period"]):
@@ -33,6 +40,9 @@ for t in range(1, params["period"]):
 	L.append(varDict["Lp"][t] - varDict["Ln"][t])
 
 
+# Pull out capital values from constraint dictionary. The constraint
+# dictionary only keeps values != 0, so try/except to add in the zero-valued
+# capital to generate a full set of results
 kh = []
 kl = []
 for t in range(1, params["period"]+1):
@@ -46,32 +56,26 @@ for t in range(1, params["period"]+1):
 	except KeyError:
 		kl.append(0)
 
-
-
-
-font = {'size'   : 10}
-matplotlib.rc('font', **font)
-
-#kh = [float(i) for i in kh]
-#kl = [float(i) for i in kl]
+# Create percentage split of capital for plotting
 totalk = [kh[i]+kl[i] for i in range(len(kh))]
-
-
 frach = [kh[i]/totalk[i] for i in range(len(kh))]
 fracl = [kl[i]/totalk[i] for i in range(len(kl))]
 
 
-
-
-dateRange = range(1, len(H)+1)
-
-#genH = [kh[i]*params["FhList"][i+1] for i in range(len(kh))]
-#genL = [kl[i]*FlList[i+1] for i in range(len(kl))]
+# Generation split between high and low capital
+genH = [kh[i]*params["FhList"][i+1] for i in range(len(kh))]
+genL = [params["GList"][i+1] - genH[i] for i in range(len(kl))]
 
 
 
 # generate matplotlib plot for investment
+font = {'size'   : 10}
+matplotlib.rc('font', **font)
 fig = plt.figure(figsize=(10, 7), dpi=100, facecolor='w', edgecolor='k')
+dateRange = range(1, len(H)+1) # x-axis for all plots
+
+
+
 
 ax1 = fig.add_subplot(2,2,1)
 # plot the data
@@ -104,11 +108,11 @@ ax3.set_title("Fractional Capital")
 ax3.set_xlabel('Years of Simulation')
 ax3.set_ylabel('Fraction of Capital')
 
-#ax4 = fig.add_subplot(2,2,4)
-#ax4.stackplot(dateRange, genH, genL)
-#ax4.set_title("Total Generating Capacity")
-#ax4.set_xlabel('Years of Simulation')
-#ax4.set_ylabel('Billion kWh per Year')
+ax4 = fig.add_subplot(2,2,4)
+ax4.stackplot(dateRange, genH, genL)
+ax4.set_title("Total Generating Capacity")
+ax4.set_xlabel('Years of Simulation')
+ax4.set_ylabel('Billion kWh per Year')
 
 
 #plt.savefig('results/simpleResult_LBD_alpha' + str(alpha) + '.png', bbox_inches='tight')
@@ -116,16 +120,7 @@ ax3.set_ylabel('Fraction of Capital')
 
 plt.show()
 
-#cost = []
-#for i in range(1, count):
-#	cost.append(getOptimalCost("FlResults/simpleResult_"+str(i)+".json"))
 
-#plt.plot(range(1,count), cost)
-#plt.xlabel("Speed of Transition")
-#plt.ylabel("Net Present Value Cost - $")
-#plt.title("Cost of Transition as a Function of Transition Speed")
-#plt.savefig('FlResults/cost_as_func_of_Fl_emissions_' + str(alpha) + '.png', bbox_inches='tight')
-#plt.close()
 
 
 

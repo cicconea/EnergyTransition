@@ -1,103 +1,22 @@
 from func_gen import *
-import re
-import json
 from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
 from six import StringIO, iteritems
 
 
 
-
-def genDataVint(i, FlFrac):
-
-
-
-	LBase = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
-	HBase = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitting capital 
-		# MW * 1000kW/MW * capacity * $/kW from Fh_0 or Fl_0
-
-	gamma = HBase/(HBase + LBase)
-
-	betah = 0.0096 # fraction of yearly operating costs
-	betal = 0.0076 # fraction of yearly operating costs
-
-	r = 0.05 # interest rate
-
-	kWperYearTokWh = 8760.0 # conversion of 1 kW power capacity for 1 year to kWh energy
-	HCap = 0.5
-	LCap = 0.3
-
-	occH = 3500 + 646 # $/kW of overnight capital cost + PV(operating costs over 50 years)
-	occL = 3700 + 260 # $/kW of overnight capital cost + PV(operating costs over 50 years)
-
-
-	el_0 = 0.0 # base emissions for low-intensity capital in lbs CO2/kWh
-	el_m = -0.1 # linear slope emissions for low-intensity capital
-	eh_0 = 1.6984 # base emissions for high intensity capital in lbs CO2/kWh
-	eh_m = -0.0031 # slope emissions for high-intensity capital
-
-	period = 5 # simulation length (!= to n)
-	nh = 30 # depreciation length for high emitting
-	nl = 10 # depreciation length for low emitting
-
-
-
-	# Version in kWh
-	Fh_0 = (1.0/occH) * HCap * kWperYearTokWh # base high emitting efficiency kW/$ * kWh conversion * capacity factor
-	Fh_m = 3*0.5*10**-6 * kWperYearTokWh # linear slope high emitting efficiency * kWh conversion * capacity factor 
-	Fl_0 = (1.0/occL) * LCap * kWperYearTokWh # base low emitting efficiency kW/$ * kWh conversion * capacity factor
-	FlMax = (1.0/917.0) * LCap * kWperYearTokWh # max is efficiency of natural gas ($917/kW) at 30% capacity
-
-
-
-
-	G_0 = 2843.3 * 10**9 # billion kWh electricity demanded
-	G_m = 32.2 * 10**9 # annual growth in demand for electricity in billion kWh
-
-
-
-	# Version in W
-	#Fh_0 = (1.0/occH) * HCap * 1000 # base high emitting efficiency kW/$ * kW > W conversion * capacity factor
-	#Fh_m = 3*0.5*10**-6 * 1000 * HCap # linear slope high emitting efficiency * kW > W conversion * capacity factor 
-	#Fl_0 = (1.0/occL) * 1000 * LCap # base low emitting efficiency kW/$ * kW > W conversion * capacity factor
-	#FlMax = (1.0/917.0) * 1000 * LCap  # max is efficiency of natural gas ($0.917/W) at 30% capacity
-
-	#G_0 = 2843.3 * 10**9 * 0.11 # in W instead of kWh
-	#G_m = 32.2 * 10**9 * 0.11 # in W instead of kWh
-
-
-
-
-	# adjusted initial amounts preserving initial capital stock ratio
-	# but taking in to account current costs to avoid weird first-period issues
-	H0 = G_0/(Fh_0 + Fl_0*(1-gamma)/gamma)
-	L0 = (G_0 - Fh_0*H0)/Fl_0
-
-
-
-
-
-	# generate efficiency and carbon intensity data
-	GList = linGen(period, G_0, G_m, minimum = 0.0, maximum = 6.0 *10.0 **12) # energy demand over time
-	# logistic arguments: (k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1)
-	# randomAllowed = True varies scale (rate) of change of the trajectory
-
-
-	FlScale, FlList = logistic(period, Fl_0, True, False, scale = i/100.0, minVal=0.34334988, maxVal=FlFrac*FlMax) # low emitting efficiency trajectory
-		# min is half of base, max is efficiency of natural gas ($917/kW) at 30% capacity
-	FhList = linGen(period, Fh_0, Fh_m, maximum=4.7764449) # high emitting efficiency trajectory 
-		# weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
-		
-	mlList = consGen(period, el_0) # low emitting carbon intensity trajectory
-		# constant 
-	mhList = linGen(period, eh_0, eh_m, minimum=1.22) # high emitting carbon intensity trajectory
-		# minimum is emission from 100% natural gas.
-
-	return GList, FlList, FhList, mlList, mhList, period, H0, L0, r, nh, nl, betah, betal
-
-
 def genData():
-
+	''' 
+	This function generates all parameters used in the simulation. 
+	This function is called in the post-process module and
+	passed to the solver function to provide data to the model object. 
+	'''
 	params = {}
+
+
+
+	params["period"] = 5 # simulation length (!= to n)
+	params["alpha"] = 0.5 # percentof business as usual emissions allowed
+
 
 	# Learning by Doing Parameters
 	params["k"] = 1 # Turning on Learning by doing k = 1, otherwise no LBD k=0
@@ -107,69 +26,64 @@ def genData():
 	params["phi"] = 0.5
 
 
+	# Electricity Demand Data
+	G_0 = 2843.3 * 10**9 # billion kWh electricity demanded
+	G_m = 32.2 * 10**9 # annual growth in demand for electricity in billion kWh
+	
 
-	params["LBase"] = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
-	params["HBase"] = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitting capital 
+	# Productivity costs and other parameters
+	kWperYearTokWh = 8760.0 # conversion of 1 kW power capacity for 1 year to kWh energy
+	HCap = 0.5 # capacity factor for high - percent of time asset is generating
+	LCap = 0.3 # capacity factor for low - percent of time asset is generating
+	occH = 3500 # $/kWh overnight capital cost high
+	occL = 3700 # $/kWh overnight capital cost low
+
+
+	# Productivity parameters
+	params["Fh_0"] = (1.0/occH) * HCap * kWperYearTokWh # base high emitting efficiency kW/$ * kWh conversion * capacity factor
+	Fh_m = 3*0.5*10**-6 * kWperYearTokWh # linear slope high emitting efficiency * kWh conversion * capacity factor 
+	params["Fl_0"] = (1.0/occL) * LCap * kWperYearTokWh # base low emitting efficiency kW/$ * kWh conversion * capacity factor
+	FlMax = (1.0/917.0) * LCap * kWperYearTokWh # max is efficiency of natural gas ($917/kW) at 30% capacity
+
+
+	# Emissions parameters
+	el_0 = 0.0 # base emissions for low-intensity capital in lbs CO2/kWh
+	el_m = -0.1 # linear slope emissions for low-intensity capital
+	eh_0 = 1.6984 # base emissions for high intensity capital in lbs CO2/kWh
+	eh_m = -0.0031 # slope emissions for high-intensity capital
+
+
+	# Setting up initial values of capital
+	LBase = 2005.0 * 10**3 * 0.3 * 3827.0 # initial low emitting capital 
+	HBase = (336341.0 + 485957.0) * 10**3 * 0.5 * 1714.0 # intial coal + ng high emitting capital 
 		# MW * 1000kW/MW * capacity * $/kW from Fh_0 or Fl_0
+	gamma = HBase/(HBase + LBase)
+	
+	# adjusted initial amounts preserving initial capital stock ratio
+	# but taking in to account current costs to avoid weird first-period issues
+	params["H0"] = G_0/(params["Fh_0"] + params["Fl_0"]*(1-gamma)/gamma)
+	params["L0"] = (G_0 - params["Fh_0"]*params["H0"])/params["Fl_0"]
 
-	params["gamma"] = params["HBase"]/(params["HBase"] + params["LBase"])
 
+	# Operating Cost Data
 	params["betah"] = 0.0096 # fraction of yearly operating costs
 	params["betal"] = 0.0076 # fraction of yearly operating costs
 
-
+	# Depreciation parameters
+	params["nh"] = 30 # depreciation factor for high emitting
+	params["nl"] = 10 # depreciation factor for low emitting
 	params["r"] = 0.05 # interest rate
-	params["kWperYearTokWh"] = 8760.0 # conversion of 1 kW power capacity for 1 year to kWh energy
-	params["HCap"] = 0.5 
-	params["LCap"] = 0.3
-
-	params["occH"] = 3500 # $/kWh
-	params["occL"] = 3700 # $/kWh
-
-	params["el_0"] = 0.0 # base emissions for low-intensity capital in lbs CO2/kWh
-	params["el_m"] = -0.1 # linear slope emissions for low-intensity capital
-	params["eh_0"] = 1.6984 # base emissions for high intensity capital in lbs CO2/kWh
-	params["eh_m"] = -0.0031 # slope emissions for high-intensity capital
-
-	params["G_0"] = 2843.3 * 10**9 # billion kWh electricity demanded
-	params["G_m"] = 32.2 * 10**9 # annual growth in demand for electricity in billion kWh
-
-	params["period"] = 5 # simulation length (!= to n)
-	params["nh"] = 30 # depreciation length for high emitting
-	params["nl"] = 10 # depreciation length for low emitting
 
 
-	params["Fh_0"] = (1.0/params["occH"]) * params["HCap"] * params["kWperYearTokWh"] # base high emitting efficiency kW/$ * kWh conversion * capacity factor
-	params["Fh_m"] = 3*0.5*10**-6 * params["kWperYearTokWh"] # linear slope high emitting efficiency * kWh conversion * capacity factor 
-	params["Fl_0"] = (1.0/params["occL"]) * params["LCap"] * params["kWperYearTokWh"] # base low emitting efficiency kW/$ * kWh conversion * capacity factor
-	params["FlMax"] = (1.0/917.0) * params["LCap"] * params["kWperYearTokWh"] # max is efficiency of natural gas ($917/kW) at 30% capacity
+	# Generate functions of electricity demand, productivity and emissions
+	# functions come from func_gen module. Low emitting productivity is 
+	# generated in the solver module because it is now a function of learning
+	# by doing
+	params["GList"] = linGen(params["period"] + 1, G_0, G_m, minimum = 0.0, maximum = 6.0 *10.0 **12) # energy demand over time
+	params["FhList"] = linGen(params["period"]+1, params["Fh_0"], Fh_m, maximum=4.7764449) # high emitting efficiency trajectory weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
+	params["mlList"] = consGen(params["period"]+1, el_0) # low emitting carbon intensity trajectory
+	params["mhList"] = linGen(params["period"]+1, eh_0, eh_m, minimum=1.22) # high emitting carbon intensity trajectory - minimum is emission from 100% natural gas.
 
-
-
-
-	# adjusted initial amounts preserving initial capital stock ratio
-	# but taking in to account current costs to avoid weird first-period issues
-	params["H0"] = params["G_0"]/(params["Fh_0"] + params["Fl_0"]*(1-params["gamma"])/params["gamma"])
-	params["L0"] = (params["G_0"] - params["Fh_0"]*params["H0"])/params["Fl_0"]
-
-
-
-
-	# generate efficiency and carbon intensity data
-	params["GList"] = linGen(params["period"] + 1, params["G_0"], params["G_m"], minimum = 0.0, maximum = 6.0 *10.0 **12) # energy demand over time
-	# logistic arguments: (k, initial, increasing, randomAllowed, scale = 0.5, minVal= 0, maxVal=1)
-	# randomAllowed = True varies scale (rate) of change of the trajectory
-
-
-	params["FhList"] = linGen(params["period"]+1, params["Fh_0"], params["Fh_m"], maximum=4.7764449) # high emitting efficiency trajectory 
-		# weighted average of coal and NG. Max is 1/917 * 8760 * 0.5
-
-	#params["FhList"] = consGen(params["period"]+1, params["Fh_0"])
-
-	params["mlList"] = consGen(params["period"]+1, params["el_0"]) # low emitting carbon intensity trajectory
-		# constant 
-	params["mhList"] = linGen(params["period"]+1, params["eh_0"], params["eh_m"], minimum=1.22) # high emitting carbon intensity trajectory
-		# minimum is emission from 100% natural gas.
 
 	return params
 
@@ -178,22 +92,28 @@ def genData():
 
 
 def NLmodelSolve(model):
-	### Create the ipopt solver plugin using the ASL interface
+	'''
+	This function imports the constructed model object and solves it using
+	the specified options (IPOPT using ASL interface). It also prints to 
+	sdout the status of the solution it finds. To change the maximum 
+	number of iterations allowed before the solver terminates, change the 
+	ipopt.opt file in this directory to the desired number of iterations
+	'''
+
+	# Create the ipopt solver plugin using the ASL interface
 	solver = 'asl:ipopt'
 	solver_io = 'nl'
-	stream_solver = False    # True prints solver output to screen
-	keepfiles =     False    # True prints intermediate file names (.nl,.sol,...)
 	opt = SolverFactory(solver,solver_io=solver_io)
 
-	### Send the model to ipopt and collect the solution
-
+	# Send the model to ipopt and collect the solution
 	print "Solving the Model"
 	instance = model.create()
 	results = opt.solve(instance)
 
-	# load the results (including any values for previously declared
+	# Load the results
 	instance.load(results)
 
+	# Check termination conditions and return status of solver to sdout
 	if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
 		print "Model feasible and optimal"
 	elif (results.solver.termination_condition == TerminationCondition.infeasible):
@@ -205,6 +125,13 @@ def NLmodelSolve(model):
 
 
 def getConstraints(instance):
+	'''
+	This function takes the solved instance of the model object
+	and puts the name of each constraint and it's value in to 
+	a dictionary. From this you can get the value of total emissions, 
+	total generation, or total capital in each period - used for
+	generating graphs in the postprocess module
+	'''
 	from pyomo.core import Constraint
 
 	constraintDict = {}
@@ -218,6 +145,14 @@ def getConstraints(instance):
 
 
 def getVars(instance):
+	'''
+	Collects the solver's values at the end of the optimization and 
+	stores them in a dictionary with the name of the variable and 
+	it's value. Note that the dictionary either has components that 
+	are single floats or a list depending on how the variable 
+	was initialized in the model object.
+	'''
+
 	from pyomo.core import Var
 	varDict = {}
 

@@ -133,7 +133,7 @@ def genDataSimple(i, FlFrac):
 
 
 
-	period = 50 # simulation length (!= to n)
+	period = 5 # simulation length (!= to n)
 	nh = 30 # depreciation length for high emitting
 	nl = 10 # depreciation length for low emitting
 
