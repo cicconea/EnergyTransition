@@ -1,6 +1,10 @@
 from func_gen import *
 from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
 from six import StringIO, iteritems
+import seaborn
+import numpy as np
+from matplotlib import pyplot as plt
+import matplotlib
 
 
 
@@ -11,8 +15,6 @@ def genData():
 	passed to the solver function to provide data to the model object. 
 	'''
 	params = {}
-
-
 
 	params["period"] = 5 # simulation length (!= to n)
 	params["alpha"] = 0.5 # percentof business as usual emissions allowed
@@ -106,7 +108,7 @@ def NLmodelSolve(model):
 	opt = SolverFactory(solver,solver_io=solver_io)
 
 	# Send the model to ipopt and collect the solution
-	print "Solving the Model"
+	print "\t Solving the Model:"
 	instance = model.create()
 	results = opt.solve(instance)
 
@@ -115,11 +117,11 @@ def NLmodelSolve(model):
 
 	# Check termination conditions and return status of solver to sdout
 	if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
-		print "Model feasible and optimal"
+		print "\t\t Model feasible and optimal"
 	elif (results.solver.termination_condition == TerminationCondition.infeasible):
-		print "Model infeasible"
+		print "\t\t Model infeasible"
 	else:
-		print "Solver Status: ",  result.solver.status
+		print "\t\t Solver Status: ",  result.solver.status
 
 	return instance
 
@@ -170,6 +172,86 @@ def getVars(instance):
 	return varDict
 
 
+def genPlot(params, constraintDict, varDict):
 
+	# from the variable dictionary, put net investments in to a list
+	# postive investments - negative investments
+	H = [params["H0"]]
+	L = [params["L0"]]
+	for t in range(1, params["period"]):
+		H.append(varDict["Hp"][t] - varDict["Hn"][t])
+		L.append(varDict["Lp"][t] - varDict["Ln"][t])
+
+
+	# Pull out capital values from constraint dictionary. The constraint
+	# dictionary only keeps values != 0, so try/except to add in the zero-valued
+	# capital to generate a full set of results
+	kh = []
+	kl = []
+	for t in range(1, params["period"]+1):
+		try:
+			kh.append(constraintDict["KhNonNeg"+str(t)])
+		except KeyError:
+			kh.append(0)
+
+		try:
+			kl.append(constraintDict["KlNonNeg"+str(t)])
+		except KeyError:
+			kl.append(0)
+
+	# Create percentage split of capital for plotting
+	totalk = [kh[i]+kl[i] for i in range(len(kh))]
+	frach = [kh[i]/totalk[i] for i in range(len(kh))]
+	fracl = [kl[i]/totalk[i] for i in range(len(kl))]
+
+
+	# Generation split between high and low capital
+	genH = [kh[i]*params["FhList"][i+1] for i in range(len(kh))]
+	genL = [params["GList"][i+1] - genH[i] for i in range(len(kl))]
+
+	# generate matplotlib plot for investment
+	font = {'size'   : 10}
+	matplotlib.rc('font', **font)
+	fig = plt.figure(figsize=(10, 7), dpi=100, facecolor='w', edgecolor='k')
+	fig.subplots_adjust(hspace=0.5)
+	dateRange = range(1, len(H)+1) # x-axis for all plots
+
+	# Create plots for 2x2 graph
+	ax1 = fig.add_subplot(2,2,1) # top left
+	ax2 = fig.add_subplot(2,2,3) # bottom left
+	ax3 = fig.add_subplot(2,2,2) # top right
+	ax4 = fig.add_subplot(2,2,4) # bottom right 
+
+	# add the data
+	ax1.plot(dateRange, H, label= "Dirty Capital Invesment")
+	ax1.plot(dateRange, L, label= "Clean Capital Investment")
+	ax2.plot(dateRange, kh, label= "Dirty Capital Stock")
+	ax2.plot(dateRange, kl, label= "Clean Capital Stock")
+	ax3.stackplot(dateRange, frach, fracl)
+	ax4.stackplot(dateRange, genH, genL)
+
+	# create labels for axes
+	ax1.set_title("Investment")
+	ax1.legend(loc = 0)
+	ax1.set_xlabel('Years of Simulation')
+	ax1.set_ylabel('Investment ($)')
+
+	ax2.set_title("$ of Capital")
+	ax2.set_xlabel('Years of Simulation')
+	ax2.set_ylabel('Investment ($)')
+
+	ax3.set_title("Fractional Capital")
+	ax3.set_xlabel('Years of Simulation')
+	ax3.set_ylabel('Fraction of Capital')
+
+	ax4.set_title("Total Generating Capacity")
+	ax4.set_xlabel('Years of Simulation')
+	ax4.set_ylabel('Billion kWh per Year')
+
+
+	#plt.savefig('results/simpleResult_LBD_alpha' + str(alpha) + '.png', bbox_inches='tight')
+	#plt.close()
+
+	plt.show()
 
 
