@@ -1,7 +1,7 @@
 from func_gen import *
 import re
 import json
-from pyomo.opt import SolverFactory
+from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
 from six import StringIO, iteritems
 
 
@@ -32,7 +32,7 @@ def genDataVint(i, FlFrac):
 	eh_0 = 1.6984 # base emissions for high intensity capital in lbs CO2/kWh
 	eh_m = -0.0031 # slope emissions for high-intensity capital
 
-	period = 50 # simulation length (!= to n)
+	period = 5 # simulation length (!= to n)
 	nh = 30 # depreciation length for high emitting
 	nl = 10 # depreciation length for low emitting
 
@@ -247,6 +247,15 @@ def modelSolve(model):
 	results = opt.solve(instance)
 	# get the results back into the instance for easy access
 	instance.load(results)
+	
+	# Check termination conditions and return status of solver to sdout
+	if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
+		print "\t\t Model feasible and optimal"
+	elif (results.solver.termination_condition == TerminationCondition.infeasible):
+		print "\t\t Model infeasible"
+	else:
+		print "\t\t Solver Status: ",  result.solver.status
+
 	return instance
 
 

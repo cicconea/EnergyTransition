@@ -17,14 +17,14 @@ def genData():
 	params = {}
 
 	params["period"] = 5 # simulation length (!= to n)
-	params["alpha"] = 0.5 # percentof business as usual emissions allowed
+	params["alpha"] = 0.8 # percentof business as usual emissions allowed
 
 
 	# Learning by Doing Parameters
 	params["k"] = 1 # Turning on Learning by doing k = 1, otherwise no LBD k=0
 	params["autonomousTech"] = 0.005 # autonomous rate of tech progress - rate of F without LBD
 	params["M"] = 0.0022
-	params["LBDgamma"] = 0.5
+	params["gamma"] = 0.5 # LBD gamma, not the fractional gamma in the rest of this module
 	params["phi"] = 0.5
 
 
@@ -87,6 +87,11 @@ def genData():
 	params["mhList"] = linGen(params["period"]+1, eh_0, eh_m, minimum=1.22) # high emitting carbon intensity trajectory - minimum is emission from 100% natural gas.
 
 
+	FlScale, FlList = logistic(params["period"]+1, params["Fl_0"], True, False, scale = 10.0/100.0, minVal=0.34334988, maxVal=FlMax) # low emitting efficiency trajectory
+		# min is half of base, max is efficiency of natural gas ($917/kW) at 30% capacity
+
+	params["FlList"] = FlList
+
 	return params
 
 
@@ -121,7 +126,8 @@ def NLmodelSolve(model):
 	elif (results.solver.termination_condition == TerminationCondition.infeasible):
 		print "\t\t Model infeasible"
 	else:
-		print "\t\t Solver Status: ",  result.solver.status
+		print "\t\t Solver Status: ",  results.solver.status
+		print "\t\t Termination Condition: ",  results.solver.termination_condition
 
 	return instance
 

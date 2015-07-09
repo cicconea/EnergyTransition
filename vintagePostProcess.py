@@ -8,9 +8,9 @@ from pyomoVintageMin import vintageModel
 from pyomo.core.base import objective
 
 
-alphaRange = range(25, 76, 25) # % emissions reduction
-countRange = [5, 10, 15] # scale of transition
-FlMaxRange = range(50, 101, 50) # % of max emissions can't be lower that 25%
+alphaRange = [50] # % emissions reduction
+countRange = [10] # scale of transition
+FlMaxRange = [100] # % of max emissions can't be lower that 25%
 
 
 for alpha in alphaRange:
@@ -150,9 +150,9 @@ for alpha in alphaRange:
 			#ax3.set_xlabel('Years of Simulation')
 			#ax3.set_ylabel('kWh/year per $')
 
-			plt.savefig('VintResults/vint_cap_and_invest_results_Fl_' + str(count) + '_alpha_' + str(alpha)+ '_FLFrac_' + str(FlMax)+'.png', bbox_inches='tight')
-			plt.close()
-
+			#plt.savefig('VintResults/vint_cap_and_invest_results_Fl_' + str(count) + '_alpha_' + str(alpha)+ '_FLFrac_' + str(FlMax)+'.png', bbox_inches='tight')
+			#plt.close()
+			plt.show()
 
 
 

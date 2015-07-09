@@ -13,25 +13,25 @@ def genK(params, pVar, nVar, t, capitalType):
 
 
 def genLBDF(params, modelVars, capitalType, k=1,):
-	autonomousTech = 0.005
-	M = 0.0022
-	gamma = 0.5
-	phi = 0.5
 	if capitalType == "High":
 		Fprev = params["Fh_0"]
-		dFdt = autonomousTech * Fprev + k * M * (params["H0"]**gamma) * (Fprev**phi)
+	#	dFdt = autonomousTech * Fprev + k * M * (params["H0"]**gamma) * (Fprev**phi)
 	elif capitalType == "Low":
 		Fprev = params["Fl_0"]
-		dFdt = autonomousTech * Fprev + k * M * (params["L0"]**gamma) * (Fprev**phi)
+	#	dFdt = autonomousTech * Fprev + k * M * (params["L0"]**gamma) * (Fprev**phi)
 
-	F = dFdt + Fprev
-	FList = [F]
+	#F = dFdt + Fprev
+	FList = [Fprev]
 	for previous in range(1, params["period"]+1):
-		dFdt = autonomousTech * Fprev + k * M * (modelVars[previous]**gamma) * (Fprev**phi)
+		dFdt = params["autonomousTech"] * Fprev + k * params["M"] * (modelVars[previous]**params["gamma"]) * (Fprev**params["phi"])
 		F = dFdt + Fprev
 		FList.append(F)
 		previous += 1
 		Fprev = F
+
+	for i in range(len(FList)):
+		print i, FList[i]
+		print
 	return FList
 
 
@@ -43,10 +43,10 @@ def simpleModel(params):
 	N = range(1, params["period"]+1)
 
 	# create variables
-	model.Hp = Var(N, domain=NonNegativeReals, initialize = 0.05)
-	model.Hn = Var(N, domain=NonNegativeReals, initialize = 500000)
-	model.Lp = Var(N, domain=NonNegativeReals, initialize = 500000)
-	model.Ln = Var(N, domain=NonNegativeReals, initialize = 0.05)
+	model.Hp = Var(N, domain=NonNegativeReals, initialize = 0.00005)
+	model.Hn = Var(N, domain=NonNegativeReals, initialize = 500000000000)
+	model.Lp = Var(N, domain=NonNegativeReals, initialize = 50000)
+	model.Ln = Var(N, domain=NonNegativeReals, initialize = 0)
 
 
 	# create expressions for productivities:
