@@ -8,7 +8,7 @@ from six import StringIO, iteritems
 
 
 params = genData()
-params["alpha"] = 1.0
+params["alpha"] = 0.5
 
 
 
