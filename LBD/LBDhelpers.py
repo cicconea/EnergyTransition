@@ -115,7 +115,7 @@ def NLmodelSolve(model):
 	# Send the model to ipopt and collect the solution
 	print "\t Solving the Model:"
 	instance = model.create()
-	results = opt.solve(instance)
+	results = opt.solve(instance, tee=False) # False = run quietly with no stdout. 
 
 	# Load the results
 	instance.load(results)
@@ -255,9 +255,135 @@ def genPlot(params, constraintDict, varDict):
 	ax4.set_ylabel('Billion kWh per Year')
 
 
-	#plt.savefig('results/simpleResult_LBD_alpha' + str(alpha) + '.png', bbox_inches='tight')
-	#plt.close()
+	plt.savefig('simpleResult_LBD_alpha_' + str(params["alpha"]) + '.png', bbox_inches='tight')
+	plt.close()
+	#plt.show()
 
-	plt.show()
+
+def genVintPlot(params, constraintDict, varDict):
+
+	H = []
+	L = []
+
+	for i in range(0, params["period"]+1):
+
+		Htemp = []
+		Ltemp = []
+		for t in range(0, params["period"]+1):
+			if (t == i) and (t==0):
+				Htemp.append(params["H0"])
+				Ltemp.append(params["L0"])
+			elif (t == i) and (t != 0):
+				Htemp.append(varDict["Hp"+str(i)][0])
+				Ltemp.append(varDict["Lp"+str(i)][0])
+			elif t > i:
+				Htemp.append(-varDict["Hn"+str(i)][t])
+				Ltemp.append(-varDict["Ln"+str(i)][t])
+
+		H.append(Htemp)
+		L.append(Ltemp)
+
+
+	Kh = []
+	Kl = []
+	for i in range(0, params["period"]+1):
+		KhVint = []
+		KlVint = []
+		for t in range(0, params["period"]+1):
+			try:
+				KhVint.append(constraintDict["KhNonNeg"+str(i)+"-"+str(t)])
+			except KeyError:
+				KhVint.append(0)
+
+			try:
+				KlVint.append(constraintDict["KlNonNeg"+str(i)+"-"+str(t)])
+			except KeyError:
+				KlVint.append(0)
+
+		Kh.append(KhVint)
+		Kl.append(KlVint)
+
+
+	# generate matplotlib plot for investment
+	fig = plt.figure(figsize=(15, 10), dpi=100, facecolor='w', edgecolor='k')
+	fig.subplots_adjust(hspace=0.5)
+
+	ax1 = fig.add_subplot(2,3,1)
+	ax2 = fig.add_subplot(2,3,2)
+	ax3 = fig.add_subplot(2,3,3)
+	ax4 = fig.add_subplot(2,3,4)
+	ax5 = fig.add_subplot(2,3,5)
+	ax6 = fig.add_subplot(2,3,6)
+
+	# plot the data
+	for i in range(0, params["period"]+1):
+		dateRange = range(i, len(H))
+		ax1.plot(dateRange, H[i], label= "H Vintage: "+str(i))
+		ax4.plot(dateRange, L[i], label= "L Vintage: "+str(i))
+
+	years = range(0, params["period"]+1)
+	ax2.stackplot(years, Kh)
+	ax5.stackplot(years, Kl)
+
+
+
+	# labels
+	ax1.set_xlabel('Years of Simulation')
+	ax1.set_ylabel('Investment ($)')
+	ax1.set_title("High Emitting Investments")
+
+	ax2.set_xlabel('Years of Simulation')
+	ax2.set_ylabel('Capital ($)')
+	ax2.set_title("High Emitting Capital")
+			
+	ax4.set_xlabel('Years of Simulation')
+	ax4.set_ylabel('Capital ($)')
+	ax4.set_title("Low Emitting Investments")
+
+	ax5.set_xlabel('Years of Simulation')
+	ax5.set_ylabel('Capital ($)')
+	ax5.set_title("Low Emitting Capital")
+
+
+	totalKh = []
+	totalKl = []
+	totalGh = []
+	totalGl = []
+
+	for t in range(params["period"]+1):
+		totalKhInst = sum([Kh[i][t] for i in range(len(Kh[i]))])
+		totalKlInst = sum([Kl[i][t] for i in range(len(Kl[i]))])
+		totalKh.append(totalKhInst)
+		totalKl.append(totalKlInst)
+
+		totalGhInst = sum([params["FhList"][i] * Kh[i][t] for i in range(len(Kh[i]))])
+		totalGh.append(totalGhInst)
+		totalGl.append(params["GList"][t] - totalGh[t])
+
+
+	ax3.plot(years, totalKh, label = "High Emitting Capital")
+	ax3.plot(years, totalKl, label = "Low Emitting Capital")
+
+	ax6.stackplot(years, totalGh, totalGl)
+	
+	#ax3.plot(range(period), FhList, label = "High Emitting Cost")
+	#ax3.plot(range(period), FlList, label = "Low Emitting Cost")
+
+	ax3.set_xlabel('Years of Simulation')
+	ax3.set_ylabel('Total Capital ($)')
+	ax3.legend(loc=0)
+	ax3.set_title("Total Capital")
+
+	ax6.set_title("Total Generating Capacity")
+	ax6.set_xlabel('Years of Simulation')
+	ax6.set_ylabel('Billion kWh per Year')
+
+	#ax3.set_title("Cost Forecast")
+	#ax3.set_xlabel('Years of Simulation')
+	#ax3.set_ylabel('kWh/year per $')
+
+	plt.savefig('vintageResult_LBD_alpha_' + str(params["alpha"]) + '.png', bbox_inches='tight')
+	plt.close()
+	#plt.show()
 
 

@@ -1,5 +1,6 @@
 from LBDhelpers import *
-from LBDpyomoVintageMin import vintageModel
+from LBDpyomoSimpleMin import simpleModel
+
 
 
 if __name__ == "__main__":
@@ -14,7 +15,7 @@ if __name__ == "__main__":
 	print "\t Imported parameters successfully"
 
 	# Create the model
-	model = vintageModel(params)
+	model = simpleModel(params)
 	print "\t Constructed model"
 
 	# Solve the model
@@ -25,7 +26,8 @@ if __name__ == "__main__":
 	varDict = getVars(instance)
 
 	print "\t Generating graphs"
-	genVintPlot(params, constraintDict, varDict)
+	genPlot(params, constraintDict, varDict)
+
 
 
 
