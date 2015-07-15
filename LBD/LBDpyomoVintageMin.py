@@ -3,7 +3,7 @@ from pyomo.environ import *
 from math import exp
 from LBDhelpers import genData
 from six import StringIO, iteritems
-
+import time
 
 
 
@@ -28,23 +28,32 @@ def genK(params, model, pVar, nVar, i, t):
 	return K
 
 
-def genLBDF(params, model):
+def genLBDF(params, model, ts):
 	Fprev = params["Fl_0"]
 	FList = [Fprev]
 	for previous in range(1, params["period"]+1):
+		print
+		print "\t \t \t start index", previous, "in", (time.time() - ts)
 		invest = getattr(model, "Lp" + str(previous))
+		print "\t \t \t get previous investment in", (time.time() - ts)
 		dFdt = params["autonomousTech"] * Fprev + params["k"] * params["M"] * (invest**params["gamma"]) * (Fprev**params["phi"])
+		print "\t \t \t calculate differential in", (time.time() - ts)
 		F = dFdt + Fprev
+		print "\t \t \t got new productivity in", (time.time() - ts)
 		FList.append(F)
-		previous += 1
+		print "\t \t \t LBD year ", previous, "complete in ", (time.time() - ts)
 		Fprev = F
 	return FList
 
 
 
 def vintageModel(params):
+	ts = time.time()
+
 	model = ConcreteModel()
-	 
+	
+	print "\t \t create concrete model in ", (time.time() - ts)
+
 	N = range(0, params["period"]+1)
 
 	# create variables
@@ -56,8 +65,13 @@ def vintageModel(params):
 		setattr(model,"Hn"+str(i),Var(N, domain=NonNegativeReals, initialize = params["H0"]))
 		setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals, initialize = 0.005))
 
+	print "\t \t initialize variables in ", (time.time() - ts)
+
+
 	# generate expressions for Low-emitting productivities via the learning by doing function
-	FlList = genLBDF(params, model)
+	FlList = genLBDF(params, model, ts)
+
+	print "\t \t generate learning by doing function in ", (time.time() - ts)
 
 
 	# Can't have negative capital in active periods
@@ -71,6 +85,8 @@ def vintageModel(params):
 				setattr(model, "HnTimeLogic"+str(i)+"-"+str(t), Constraint(expr = getattr(model, "Hn"+str(i))[t] == 0))
 				setattr(model, "LnTimeLogic"+str(i)+"-"+str(t), Constraint(expr = getattr(model, "Ln"+str(i))[t] == 0))
 
+	print "\t \t set nonegativity constraints in ", (time.time() - ts)
+
 
 	# generation constraints
 	for t in range(1, params["period"] + 1):
@@ -78,6 +94,9 @@ def vintageModel(params):
 		for i in range(0, t+1):
 			genSum += params["FhList"][i]*genK(params, model, "Hp", "Hn", i, t) + FlList[i]*genK(params, model, "Lp", "Ln", i, t)
 		setattr(model, "Gen"+str(t), Constraint(expr = genSum >= params["GList"][t]))
+
+	print "\t \t create generation constraints in ", (time.time() - ts)
+
 
 	# emission constraint
 	emit = params["H0"] * params["FhList"][0]* params["mhList"][0] + params["L0"]*FlList[0]*params["mlList"][0]
@@ -87,6 +106,8 @@ def vintageModel(params):
 
 	maxEmit = params["alpha"] * sum([params["mhList"][i]*params["FhList"][i]*params["H0"] + params["mlList"][i]*FlList[0]*params["L0"] for i in N])
 	setattr(model, "emissions", Constraint(expr = emit <= maxEmit))
+
+	print "\t \t create emissions constraints in ", (time.time() - ts)
 
 
 	# objective function is present value of investment cost minus operating cost savings
@@ -105,9 +126,14 @@ def vintageModel(params):
 			OCh += subh
 			OCl += subl
 
+	print "\t \t define operating costs in ", (time.time() - ts)
+
 
 	# objective with operating costs
 	model.OBJ = Objective(expr = sum([(getattr(model, "Hp"+str(i)) + getattr(model, "Lp"+str(i)))*exp(-params["r"]*i) for i in range(1, params["period"]+1)]) - params["betah"]*OCh - params["betal"]*OCl)
+
+	print "\t \t set objective in ", (time.time() - ts)
+
 
 	return model
 
