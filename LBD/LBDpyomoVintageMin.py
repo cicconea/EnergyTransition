@@ -4,7 +4,7 @@ from math import exp
 from LBDhelpers import genData
 from six import StringIO, iteritems
 import time
-
+import pympler
 
 
 # this function builds an expression for capital in time t for capital Hp/Hn/Lp/Ln of age i
@@ -31,8 +31,8 @@ def genK(params, model, pVar, nVar, i, t):
 def genLBDF(params, model, ts):
 	Fprev = params["Fl_0"]
 	FList = [Fprev]
+	print
 	for previous in range(1, params["period"]+1):
-		print
 		print "\t \t \t start index", previous, "in", (time.time() - ts)
 		invest = getattr(model, "Lp" + str(previous))
 		print "\t \t \t get previous investment in", (time.time() - ts)
@@ -42,9 +42,25 @@ def genLBDF(params, model, ts):
 		print "\t \t \t got new productivity in", (time.time() - ts)
 		FList.append(F)
 		print "\t \t \t LBD year ", previous, "complete in ", (time.time() - ts)
+
+		print "\t \t \t \t ", F
 		Fprev = F
+		print "\t \t \t size of F at time", previous, "is", pympler.asizeof.asizeof(F)
+		print
+
 	return FList
 
+
+def genCumLBDF(params, model):
+	progressRatio = 1.05
+	doublingTime = 10
+	Fprev = params["Fl_0"]
+	FList = [Fprev]
+	for i in range(1, params["period"] + 1):
+		avgInvest = (params["L0"] + sum([getattr(model, "Lp" + str(j)) for j in range(1, i)]))/params["L0"]
+		Fi = avgInvest * (progressRatio*i) ** doublingTime
+		FList.append(Fi)
+	return FList
 
 
 def vintageModel(params):
@@ -66,13 +82,17 @@ def vintageModel(params):
 		setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals, initialize = 0.005))
 
 	print "\t \t initialize variables in ", (time.time() - ts)
+	print "\t \t Hp1 memory is ", pympler.asizeof.asizeof(model.Hp1)
+	print "\t \t Hn1 memory is ", pympler.asizeof.asizeof(model.Hn1)
+
 
 
 	# generate expressions for Low-emitting productivities via the learning by doing function
-	FlList = genLBDF(params, model, ts)
+	#FlList = genLBDF(params, model, ts)
+	FlList = genCumLBDF(params, model)
 
 	print "\t \t generate learning by doing function in ", (time.time() - ts)
-
+	print "\t \t Flist memory is ", pympler.asizeof.asizeof(FlList)
 
 	# Can't have negative capital in active periods
 	for i in range(0, params["period"] + 1):
@@ -134,6 +154,7 @@ def vintageModel(params):
 
 	print "\t \t set objective in ", (time.time() - ts)
 
+	print "\t \t total model size is ", pympler.asizeof.asizeof(model)
 
 	return model
 

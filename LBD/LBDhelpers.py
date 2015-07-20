@@ -16,7 +16,7 @@ def genData():
 	'''
 	params = {}
 
-	params["period"] = 12 # simulation length (!= to n)
+	params["period"] = 75 # simulation length (!= to n)
 	params["alpha"] = 0.8 # percentof business as usual emissions allowed
 
 
@@ -115,7 +115,7 @@ def NLmodelSolve(model):
 	# Send the model to ipopt and collect the solution
 	print "\t Solving the Model:"
 	instance = model.create()
-	results = opt.solve(instance, tee=False) # False = run quietly with no stdout. 
+	results = opt.solve(instance, tee=True) # False = run quietly with no stdout. 
 
 	# Load the results
 	instance.load(results)
@@ -382,8 +382,8 @@ def genVintPlot(params, constraintDict, varDict):
 	#ax3.set_xlabel('Years of Simulation')
 	#ax3.set_ylabel('kWh/year per $')
 
-	plt.savefig('vintageResult_LBD_alpha_' + str(params["alpha"]) + '.png', bbox_inches='tight')
-	plt.close()
-	#plt.show()
+	#plt.savefig('vintageResult_LBD_alpha_' + str(params["alpha"]) + '.png', bbox_inches='tight')
+	#plt.close()
+	plt.show()
 
 
