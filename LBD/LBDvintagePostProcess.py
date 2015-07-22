@@ -26,8 +26,12 @@ if __name__ == "__main__":
 	constraintDict = getConstraints(instance)
 	varDict = getVars(instance)
 
+
 	print "\t Generating graphs in ", (time.time() - start)
 	genVintPlot(params, constraintDict, varDict)
+
+	print "\t Checking Constraints in ", (time.time() - start)
+	checkConstraintFeasibility(params, varDict, constraintDict)
 
 	print "\t Done in ", (time.time() - start)
 

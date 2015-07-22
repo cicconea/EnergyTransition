@@ -53,15 +53,24 @@ def genLBDF(params, model, ts):
 
 def genCumLBDF(params, model):
 	progressRatio = 1.05
-	doublingTime = 10
-	Fprev = params["Fl_0"]
-	FList = [Fprev]
-	for i in range(1, params["period"] + 1):
+	doublingTime = 0.5
+	F_1 = (params["L0"] + model.Lp1)/params["L0"] * progressRatio**doublingTime
+	FList = [params["Fl_0"], F_1]
+	for i in range(2, params["period"] + 1):
 		avgInvest = (params["L0"] + sum([getattr(model, "Lp" + str(j)) for j in range(1, i)]))/params["L0"]
-		Fi = avgInvest * (progressRatio*i) ** doublingTime
-		FList.append(Fi)
+		F_i = avgInvest * (progressRatio*i) ** doublingTime
+		FList.append(F_i)
 	return FList
 
+
+def closedLBDF(params, model):
+	FList = [params["Fl_0"]]
+	for i in range(1, params["period"]+1):
+		exponent = -params["autonomousTech"]*i - params["M"]* sum([getattr(model, "Lp"+str(j)) for j in range(1, i)])
+		F = params["Fl_0"]* (2.7182818284**exponent)
+		FList.append(F)
+
+	return FList
 
 def vintageModel(params):
 	ts = time.time()
@@ -75,11 +84,11 @@ def vintageModel(params):
 	# create variables
 	# Hp_i is the positive investment in high over all years list of all years
 	for i in range(1, params["period"] + 1):
-		setattr(model,"Hp"+str(i),Var(domain=NonNegativeReals, initialize = 0.005))
+		setattr(model,"Hp"+str(i),Var(domain=NonNegativeReals, initialize = 0.00005))
 		setattr(model,"Lp"+str(i),Var(domain=NonNegativeReals, initialize = params["L0"]))
 	for i in range(0, params["period"] + 1):	
 		setattr(model,"Hn"+str(i),Var(N, domain=NonNegativeReals, initialize = params["H0"]))
-		setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals, initialize = 0.005))
+		setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals, initialize = 0.00005))
 
 	print "\t \t initialize variables in ", (time.time() - ts)
 	print "\t \t Hp1 memory is ", pympler.asizeof.asizeof(model.Hp1)
@@ -89,7 +98,8 @@ def vintageModel(params):
 
 	# generate expressions for Low-emitting productivities via the learning by doing function
 	#FlList = genLBDF(params, model, ts)
-	FlList = genCumLBDF(params, model)
+	FlList = closedLBDF(params, model)
+
 
 	print "\t \t generate learning by doing function in ", (time.time() - ts)
 	print "\t \t Flist memory is ", pympler.asizeof.asizeof(FlList)
@@ -105,6 +115,17 @@ def vintageModel(params):
 				setattr(model, "HnTimeLogic"+str(i)+"-"+str(t), Constraint(expr = getattr(model, "Hn"+str(i))[t] == 0))
 				setattr(model, "LnTimeLogic"+str(i)+"-"+str(t), Constraint(expr = getattr(model, "Ln"+str(i))[t] == 0))
 
+
+	for i in range(1, params["period"] + 1):
+		for t in range(1, params["period"] + 1):
+			if t < i:
+				if genK(params, model, "Hp", "Hn", i, t) != 0:
+					setattr(model, "KhZERO"+str(i)+"-"+str(t), Constraint(expr = genK(params, model, "Hp", "Hn", i, t) == 0))
+				if genK(params, model, "Lp", "Ln", i, t) != 0:
+					setattr(model, "KlZERO"+str(i)+"-"+str(t), Constraint(expr = genK(params, model, "Lp", "Ln", i, t) == 0))
+
+
+
 	print "\t \t set nonegativity constraints in ", (time.time() - ts)
 
 
@@ -113,7 +134,9 @@ def vintageModel(params):
 		genSum = 0
 		for i in range(0, t+1):
 			genSum += params["FhList"][i]*genK(params, model, "Hp", "Hn", i, t) + FlList[i]*genK(params, model, "Lp", "Ln", i, t)
-		setattr(model, "Gen"+str(t), Constraint(expr = genSum >= params["GList"][t]))
+
+		setattr(model, "GenUpper"+str(t), Constraint(expr = genSum <= params["GList"][t] * 1.001))
+		setattr(model, "GenLower"+str(t), Constraint(expr = genSum >= params["GList"][t] * 0.999))
 
 	print "\t \t create generation constraints in ", (time.time() - ts)
 
@@ -125,7 +148,7 @@ def vintageModel(params):
 			emit += params["mhList"][i]*params["FhList"][i]*genK(params, model, "Hp", "Hn", i, t) + params["mlList"][i] * FlList[i]*genK(params, model, "Lp", "Ln", i, t)
 
 	maxEmit = params["alpha"] * sum([params["mhList"][i]*params["FhList"][i]*params["H0"] + params["mlList"][i]*FlList[0]*params["L0"] for i in N])
-	setattr(model, "emissions", Constraint(expr = emit <= maxEmit))
+	model.emissions = Constraint(expr = emit <= maxEmit)
 
 	print "\t \t create emissions constraints in ", (time.time() - ts)
 

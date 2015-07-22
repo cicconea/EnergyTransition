@@ -16,8 +16,8 @@ def genData():
 	'''
 	params = {}
 
-	params["period"] = 75 # simulation length (!= to n)
-	params["alpha"] = 0.8 # percentof business as usual emissions allowed
+	params["period"] = 5 # simulation length (!= to n)
+	params["alpha"] = 0.05 # percentof business as usual emissions allowed
 
 
 	# Learning by Doing Parameters
@@ -115,7 +115,7 @@ def NLmodelSolve(model):
 	# Send the model to ipopt and collect the solution
 	print "\t Solving the Model:"
 	instance = model.create()
-	results = opt.solve(instance, tee=True) # False = run quietly with no stdout. 
+	results = opt.solve(instance, tee=False) # False = run quietly with no stdout. 
 
 	# Load the results
 	instance.load(results)
@@ -305,7 +305,7 @@ def genVintPlot(params, constraintDict, varDict):
 
 
 	# generate matplotlib plot for investment
-	fig = plt.figure(figsize=(15, 10), dpi=100, facecolor='w', edgecolor='k')
+	fig = plt.figure(figsize=(10, 8), dpi=100, facecolor='w', edgecolor='k')
 	fig.subplots_adjust(hspace=0.5)
 
 	ax1 = fig.add_subplot(2,3,1)
@@ -348,7 +348,9 @@ def genVintPlot(params, constraintDict, varDict):
 	totalKh = []
 	totalKl = []
 	totalGh = []
-	totalGl = []
+	totalGl = [params["Fl_0"]*params["L0"]]
+
+
 
 	for t in range(params["period"]+1):
 		totalKhInst = sum([Kh[i][t] for i in range(len(Kh[i]))])
@@ -358,7 +360,11 @@ def genVintPlot(params, constraintDict, varDict):
 
 		totalGhInst = sum([params["FhList"][i] * Kh[i][t] for i in range(len(Kh[i]))])
 		totalGh.append(totalGhInst)
-		totalGl.append(params["GList"][t] - totalGh[t])
+
+
+	for i in range(1, params["period"]+1):
+		totalGl.append(constraintDict["GenUpper"+str(i)] - totalGh[i])
+
 
 
 	ax3.plot(years, totalKh, label = "High Emitting Capital")
@@ -385,5 +391,85 @@ def genVintPlot(params, constraintDict, varDict):
 	#plt.savefig('vintageResult_LBD_alpha_' + str(params["alpha"]) + '.png', bbox_inches='tight')
 	#plt.close()
 	plt.show()
+	return
+
+
+def checkConstraintFeasibility(params, varDict, constraintDict):
+	#check non-negativity constraints
+	print "Checking Time Logic Constraints"
+	print "Vintage \t Year \t Value \t Ought To Be \t Flag"
+
+	for i in range(0, params["period"] + 1):
+		for t in range(0, params["period"] + 1):
+			if t<i:
+				print i, "\t",  t, "\t HnTimeLogic" ,constraintDict["HnTimeLogic"+str(i)+"-"+str(t)], "\t", "Zero", "\t" ,constraintDict["HnTimeLogic"+str(i)+"-"+str(t)] == 0
+				print i, "\t",  t, "\t LnTimeLogic" ,constraintDict["LnTimeLogic"+str(i)+"-"+str(t)], "\t", "Zero", "\t" ,constraintDict["LnTimeLogic"+str(i)+"-"+str(t)] == 0
+
+				try:
+					temp = constraintDict["KhZERO"+str(i)+"-"+str(t)]
+				except KeyError:
+					temp = "Null"
+				print i, "\t",  t, "\t KhZero" ,temp , "\t", "Zero","\t" , temp == 0
+
+				try:
+					temp = constraintDict["KlZERO"+str(i)+"-"+str(t)]
+				except KeyError:
+					temp = "Null"
+				print i, "\t",  t, "\t KhZero" ,temp , "\t", "Zero","\t" , temp == 0
+
+	print
+	print
+	print "Checking Capital Non-Negativity Constraints"
+	print "Vintage \t Year \t Value \t Ought To Be \t Flag"
+
+	for i in range(0, params["period"] + 1):
+		for t in range(0, params["period"] + 1):
+			if t>=i:
+				print i, "\t",  t, "\t KhNonNeg" ,constraintDict["KhNonNeg"+str(i)+"-"+str(t)], "\t", "Non-Negative", "\t" ,constraintDict["KhNonNeg"+str(i)+"-"+str(t)] >= 0
+				print i, "\t",  t, "\t KlNonNeg" ,constraintDict["KlNonNeg"+str(i)+"-"+str(t)], "\t", "Non-Negative", "\t" ,constraintDict["KlNonNeg"+str(i)+"-"+str(t)] >= 0
+
+
+	print
+	print
+	print "Checking Generation Constraints"
+	print "Year \t Value \t Ought To Be \t Flag"
+
+	for t in range(1, params["period"] + 1):
+		print t, "\t Generation Upper"+str(t), constraintDict["GenUpper"+str(t)], "\t", params["GList"][t], "\t" ,constraintDict["GenUpper"+str(t)] <= params["GList"][t] * 1.001
+		print t, "\t Generation Lower"+str(t), constraintDict["GenUpper"+str(t)], "\t", params["GList"][t], "\t" ,constraintDict["GenUpper"+str(t)] >= params["GList"][t] * 0.999
+
+
+
+	print
+	print
+	print "Checking Emission Constraint"
+	print "Year \t Value \t Ought To Be \t Flag"
+	maxEmit = sum([params["mhList"][i]*params["FhList"][i]*params["H0"] + params["mlList"][i]*params["Fl_0"]*params["L0"] for i in range(0, params["period"]+1)])
+	for t in range(1, params["period"] + 1):
+		print "Emission \t", params["alpha"], "\t",  constraintDict["emissions"], "\t", str(params["alpha"]) + " * "+ str(maxEmit), "\t" , constraintDict["emissions"] <= params["alpha"]*maxEmit
+
+
+	return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
