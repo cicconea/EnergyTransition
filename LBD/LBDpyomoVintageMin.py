@@ -27,7 +27,7 @@ def genK(params, model, pVar, nVar, i, t):
 
 	return K
 
-
+# recursive learning by doing for productivity - Don't use!
 def genLBDF(params, model, ts):
 	Fprev = params["Fl_0"]
 	FList = [Fprev]
@@ -51,18 +51,7 @@ def genLBDF(params, model, ts):
 	return FList
 
 
-def genCumLBDF(params, model):
-	progressRatio = 1.05
-	doublingTime = 0.5
-	F_1 = (params["L0"] + model.Lp1)/params["L0"] * progressRatio**doublingTime
-	FList = [params["Fl_0"], F_1]
-	for i in range(2, params["period"] + 1):
-		avgInvest = (params["L0"] + sum([getattr(model, "Lp" + str(j)) for j in range(1, i)]))/params["L0"]
-		F_i = avgInvest * (progressRatio*i) ** doublingTime
-		FList.append(F_i)
-	return FList
-
-
+# closed form learning by doing productivity 
 def closedLBDF(params, model):
 	FList = [params["Fl_0"]]
 	for i in range(1, params["period"]+1):
@@ -72,6 +61,9 @@ def closedLBDF(params, model):
 
 	return FList
 
+
+
+# create the model object and add constraints defined by params dictionary
 def vintageModel(params):
 	ts = time.time()
 

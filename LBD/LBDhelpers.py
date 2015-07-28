@@ -1,7 +1,6 @@
 from func_gen import *
 from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
 from six import StringIO, iteritems
-import seaborn
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib
@@ -16,7 +15,7 @@ def genData():
 	'''
 	params = {}
 
-	params["period"] = 5 # simulation length (!= to n)
+	params["period"] = 50 # simulation length (!= to n)
 	params["alpha"] = 0.05 # percentof business as usual emissions allowed
 
 
@@ -37,8 +36,8 @@ def genData():
 	kWperYearTokWh = 8760.0 # conversion of 1 kW power capacity for 1 year to kWh energy
 	HCap = 0.5 # capacity factor for high - percent of time asset is generating
 	LCap = 0.3 # capacity factor for low - percent of time asset is generating
-	occH = 3500 # $/kWh overnight capital cost high
-	occL = 3700 # $/kWh overnight capital cost low
+	occH = 3500 # $/kW overnight capital cost high
+	occL = 3700 # $/kW overnight capital cost low
 
 
 	# Productivity parameters
@@ -115,7 +114,7 @@ def NLmodelSolve(model):
 	# Send the model to ipopt and collect the solution
 	print "\t Solving the Model:"
 	instance = model.create()
-	results = opt.solve(instance, tee=False) # False = run quietly with no stdout. 
+	results = opt.solve(instance, tee=True) # False = run quietly with no stdout. 
 
 	# Load the results
 	instance.load(results)
