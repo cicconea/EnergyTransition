@@ -4,6 +4,7 @@ from six import StringIO, iteritems
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib
+import seaborn
 
 
 
@@ -15,8 +16,8 @@ def genData():
 	'''
 	params = {}
 
-	params["period"] = 50 # simulation length (!= to n)
-	params["alpha"] = 0.05 # percentof business as usual emissions allowed
+	params["period"] = 150 # simulation length (!= to n)
+	params["alpha"] = 0.50 # percentof business as usual emissions allowed
 
 
 	# Learning by Doing Parameters
@@ -387,9 +388,9 @@ def genVintPlot(params, constraintDict, varDict):
 	#ax3.set_xlabel('Years of Simulation')
 	#ax3.set_ylabel('kWh/year per $')
 
-	#plt.savefig('vintageResult_LBD_alpha_' + str(params["alpha"]) + '.png', bbox_inches='tight')
-	#plt.close()
-	plt.show()
+	plt.savefig('vintageResult_LBD_alpha_' + str(params["alpha"]) + '.png', bbox_inches='tight')
+	plt.close()
+	#plt.show()
 	return
 
 
@@ -435,7 +436,7 @@ def checkConstraintFeasibility(params, varDict, constraintDict):
 
 	for t in range(1, params["period"] + 1):
 		print t, "\t Generation Upper"+str(t), "\t", round(constraintDict["GenUpper"+str(t)],5), "\t", round(params["GList"][t],5), "\t" ,constraintDict["GenUpper"+str(t)] <= params["GList"][t] * 1.001
-		print t, "\t Generation Lower"+str(t), "\t", round(constraintDict["GenUpper"+str(t)],5), "\t", round(params["GList"][t],5), "\t" ,constraintDict["GenUpper"+str(t)] >= params["GList"][t] * 0.999
+		print t, "\t Generation Lower"+str(t), "\t", round(constraintDict["GenLower"+str(t)],5), "\t", round(params["GList"][t],5), "\t" ,constraintDict["GenLower"+str(t)] >= params["GList"][t] * 0.999
 
 
 

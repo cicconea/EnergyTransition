@@ -1,1 +1,14 @@
-max_iter 100000
+# this file contains all ipopt options
+
+# set maximum number of optimization iterations
+# max_iter 100
+
+# set frequency of the printed iterations
+print_frequency_iter 50
+
+tol 1
+constr_viol_tol 1
+acceptable_tol 1
+#bound_relax_factor 0
+
+print_info_string yes

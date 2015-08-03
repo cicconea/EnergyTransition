@@ -1,6 +1,6 @@
 from __future__ import division
 from pyomo.environ import *
-from math import exp
+from math import exp, sqrt
 from LBDhelpers import genData
 from six import StringIO, iteritems
 import time
@@ -27,38 +27,18 @@ def genK(params, model, pVar, nVar, i, t):
 
 	return K
 
-# recursive learning by doing for productivity - Don't use!
-def genLBDF(params, model, ts):
-	Fprev = params["Fl_0"]
-	FList = [Fprev]
-	print
-	for previous in range(1, params["period"]+1):
-		print "\t \t \t start index", previous, "in", (time.time() - ts)
-		invest = getattr(model, "Lp" + str(previous))
-		print "\t \t \t get previous investment in", (time.time() - ts)
-		dFdt = params["autonomousTech"] * Fprev + params["k"] * params["M"] * (invest**params["gamma"]) * (Fprev**params["phi"])
-		print "\t \t \t calculate differential in", (time.time() - ts)
-		F = dFdt + Fprev
-		print "\t \t \t got new productivity in", (time.time() - ts)
-		FList.append(F)
-		print "\t \t \t LBD year ", previous, "complete in ", (time.time() - ts)
-
-		print "\t \t \t \t ", F
-		Fprev = F
-		print "\t \t \t size of F at time", previous, "is", pympler.asizeof.asizeof(F)
-		print
-
-	return FList
-
 
 # closed form learning by doing productivity 
 def closedLBDF(params, model):
 	FList = [params["Fl_0"]]
 	for i in range(1, params["period"]+1):
-		exponent = -params["autonomousTech"]*i - params["M"]* sum([getattr(model, "Lp"+str(j)) for j in range(1, i)])
-		F = params["Fl_0"]* (2.7182818284**exponent)
-		FList.append(F)
+		Integral = sqrt(params["L0"])
+		for t in range(1, i+1):
+			Integral += exp(-0.5 * params["autonomousTech"]*t) * sqrt(getattr(model, "Lp" + str(t)))
+		
+		F = (1/4)*exp(params["autonomousTech"]*i) * (2 * sqrt(params["Fl_0"]) + params["k"]*params["M"]*Integral)**2
 
+		FList.append(F)
 	return FList
 
 
@@ -66,7 +46,6 @@ def closedLBDF(params, model):
 # create the model object and add constraints defined by params dictionary
 def vintageModel(params):
 	ts = time.time()
-
 	model = ConcreteModel()
 	
 	print "\t \t create concrete model in ", (time.time() - ts)
@@ -76,11 +55,11 @@ def vintageModel(params):
 	# create variables
 	# Hp_i is the positive investment in high over all years list of all years
 	for i in range(1, params["period"] + 1):
-		setattr(model,"Hp"+str(i),Var(domain=NonNegativeReals, initialize = 0.00005))
+		setattr(model,"Hp"+str(i),Var(domain=NonNegativeReals, initialize = 0.00000005))
 		setattr(model,"Lp"+str(i),Var(domain=NonNegativeReals, initialize = params["L0"]))
 	for i in range(0, params["period"] + 1):	
 		setattr(model,"Hn"+str(i),Var(N, domain=NonNegativeReals, initialize = params["H0"]))
-		setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals, initialize = 0.00005))
+		setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals, initialize = 0.00000005))
 
 	print "\t \t initialize variables in ", (time.time() - ts)
 	print "\t \t Hp1 memory is ", pympler.asizeof.asizeof(model.Hp1)
@@ -170,6 +149,7 @@ def vintageModel(params):
 	print "\t \t set objective in ", (time.time() - ts)
 
 	print "\t \t total model size is ", pympler.asizeof.asizeof(model)
+
 
 	return model
 
