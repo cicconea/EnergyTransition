@@ -9,7 +9,7 @@ if __name__ == "__main__":
 	create the model, solve and plot the results. 
 	'''
 	
-	phiList = [0.5]#, 1.5]
+	phiList = [-0.5, 0.5, 1.5]
 	kList = [0, 0.5, 1]
 
 
@@ -24,6 +24,7 @@ if __name__ == "__main__":
 			#update parameters for multiple simulations
 			params["phi"] = phi
 			params["k"] = k
+
 
 			print
 			print "\t Imported parameters successfully in ", (time.time() - start)

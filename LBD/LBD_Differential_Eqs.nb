@@ -1,0 +1,120 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      3322,        110]
+NotebookOptionsPosition[      2996,         93]
+NotebookOutlinePosition[      3352,        109]
+CellTagsIndexPosition[      3309,        106]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[
+ RowBox[{"DSolve", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"f", "'"}], "[", "t", "]"}], " ", "\[Equal]", " ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"a", "[", "t", "]"}], " ", "*", " ", 
+      RowBox[{"f", "[", "t", "]"}]}], " ", "+", " ", 
+     RowBox[{"k", "*", "M", "*", 
+      RowBox[{
+       RowBox[{"h", "[", "t", "]"}], "^", 
+       RowBox[{"(", 
+        RowBox[{"1", "/", "2"}], ")"}]}], " ", "*", 
+      RowBox[{
+       RowBox[{"f", "[", "t", "]"}], "^", 
+       RowBox[{"(", 
+        RowBox[{"1", "/", "2"}], ")"}]}]}]}]}], ",", " ", 
+   RowBox[{"f", "[", "t", "]"}], ",", " ", "t"}], "]"}]], "Input",
+ CellChangeTimes->{{3.6470111071675587`*^9, 3.647011206030648*^9}, {
+  3.647011240061646*^9, 3.647011260204164*^9}, {3.647019326813836*^9, 
+  3.647019363609305*^9}, {3.647102333549581*^9, 3.6471023373151503`*^9}, {
+  3.6471023845885773`*^9, 3.647102413370473*^9}}],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"f", "[", "t", "]"}], "\[Rule]", 
+    RowBox[{
+     FractionBox["1", "4"], " ", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{
+       SubsuperscriptBox["\[Integral]", "1", "t"], 
+       RowBox[{
+        RowBox[{"a", "[", 
+         RowBox[{"K", "[", "1", "]"}], "]"}], 
+        RowBox[{"\[DifferentialD]", 
+         RowBox[{"K", "[", "1", "]"}]}]}]}]], " ", 
+     SuperscriptBox[
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"2", " ", 
+         RowBox[{"C", "[", "1", "]"}]}], "+", 
+        RowBox[{
+         SubsuperscriptBox["\[Integral]", "1", "t"], 
+         RowBox[{
+          RowBox[{
+           SuperscriptBox["\[ExponentialE]", 
+            RowBox[{
+             RowBox[{"-", 
+              FractionBox["1", "2"]}], " ", 
+             RowBox[{
+              SubsuperscriptBox["\[Integral]", "1", 
+               RowBox[{"K", "[", "2", "]"}]], 
+              RowBox[{
+               RowBox[{"a", "[", 
+                RowBox[{"K", "[", "1", "]"}], "]"}], 
+               RowBox[{"\[DifferentialD]", 
+                RowBox[{"K", "[", "1", "]"}]}]}]}]}]], " ", "k", " ", "M", 
+           " ", 
+           SqrtBox[
+            RowBox[{"h", "[", 
+             RowBox[{"K", "[", "2", "]"}], "]"}]]}], 
+          RowBox[{"\[DifferentialD]", 
+           RowBox[{"K", "[", "2", "]"}]}]}]}]}], ")"}], "2"]}]}], "}"}], 
+  "}"}]], "Output",
+ CellChangeTimes->{{3.647102392292914*^9, 3.6471024157604723`*^9}}]
+}, Open  ]]
+},
+WindowSize->{731, 586},
+WindowMargins->{{37, Automatic}, {Automatic, 0}},
+FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (December 4, \
+2014)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 908, 23, 46, "Input"],
+Cell[1491, 47, 1489, 43, 108, "Output"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
+

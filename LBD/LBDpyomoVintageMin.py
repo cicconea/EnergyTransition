@@ -31,6 +31,10 @@ def genK(params, model, pVar, nVar, i, t):
 # closed form learning by doing productivity 
 def closedLBDF(params, model):
 	FList = [params["Fl_0"]]
+	
+
+
+
 	for i in range(1, params["period"]+1):
 		Integral = sqrt(params["L0"])
 		for t in range(1, i+1):
