@@ -9,6 +9,9 @@ if __name__ == "__main__":
 	create the model, solve and plot the results. 
 	'''
 	
+	# cases for learning by doing
+	# phi is intertemporal knowledge spillover
+	# k is degree of learning by doing transfer
 	phiList = [-0.5, 0.5, 1.5]
 	kList = [0, 0.5, 1]
 
@@ -51,7 +54,7 @@ if __name__ == "__main__":
 
 
 			f = open("solverStatus.txt", "a")
-			f.write(str(phi)+ " " + str(k) + " " +str(solverStatus) + " " + str(terminationCondition) + '\n')
+			f.write(time.asctime() + " " + str(phi)+ " " + str(k) + " " +str(solverStatus) + " " + str(terminationCondition) + '\n')
 			f.close
 
 
