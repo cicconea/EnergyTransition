@@ -16,7 +16,7 @@ def genData():
 	'''
 	params = {}
 
-	params["period"] = 50 # simulation length (!= to n)
+	params["period"] = 10 # simulation length (!= to n)
 	params["alpha"] = 0.50 # percentof business as usual emissions allowed
 
 

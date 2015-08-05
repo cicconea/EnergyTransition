@@ -7,6 +7,6 @@
 print_frequency_iter 50
 
 tol 1
-constr_viol_tol 1
+constr_viol_tol 0.001
 acceptable_tol 0.01
 
