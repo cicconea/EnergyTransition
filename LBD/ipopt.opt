@@ -8,7 +8,5 @@ print_frequency_iter 50
 
 tol 1
 constr_viol_tol 1
-acceptable_tol 1
-#bound_relax_factor 0
+acceptable_tol 0.01
 
-print_info_string yes

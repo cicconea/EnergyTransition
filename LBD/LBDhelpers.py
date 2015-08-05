@@ -16,7 +16,7 @@ def genData():
 	'''
 	params = {}
 
-	params["period"] = 150 # simulation length (!= to n)
+	params["period"] = 50 # simulation length (!= to n)
 	params["alpha"] = 0.50 # percentof business as usual emissions allowed
 
 
@@ -388,7 +388,7 @@ def genVintPlot(params, constraintDict, varDict):
 	#ax3.set_xlabel('Years of Simulation')
 	#ax3.set_ylabel('kWh/year per $')
 
-	plt.savefig('vintageResult_LBD_alpha_' + str(params["alpha"]) + '.png', bbox_inches='tight')
+	plt.savefig('results/vintageResult_LBD_phi_'+ str(params["phi"])+'_k_'+str(params["k"])+'_alpha_' + str(params["alpha"]) + '.png', bbox_inches='tight')
 	plt.close()
 	#plt.show()
 	return

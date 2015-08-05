@@ -10,7 +10,7 @@ if __name__ == "__main__":
 	'''
 	
 	phiList = [0.5]#, 1.5]
-	kList = [1]# [0, 0.5, 1]
+	kList = [0, 0.5, 1]
 
 
 	for phi in phiList:
@@ -31,9 +31,6 @@ if __name__ == "__main__":
 			# Create the model
 			model = vintageModel(params)
 			print "\t Constructed model in ", (time.time() - start)
-
-
-			#model.write("modelTest.nl", "nl")
 
 
 			# Solve the model
@@ -58,20 +55,20 @@ if __name__ == "__main__":
 
 
 			# save output to files
-			f = open( str(phi)+ "_" + str(k)+ "constraints.csv", 'wb')
+			f = open( "results/" + str(phi)+ "_" + str(k)+ "constraints.csv", 'wb')
 			writer = csv.writer(f)
 			for key, value in constraintDict.items():
 				writer.writerow([key, value])
 			f.close()
 
-			f = open( str(phi)+ "_" + str(k)+ "variables.csv", 'wb')
+			f = open( "results/" + str(phi)+ "_" + str(k)+ "variables.csv", 'wb')
 			writer = csv.writer(f)
 			for key, value in varDict.items():
 				writer.writerow([key, value])
 			f.close()
 
 			# save constraint checks:
-			f = open( str(phi)+ "_" + str(k)+ "checks.csv", 'wb')
+			f = open( "results/" + str(phi)+ "_" + str(k)+ "checks.csv", 'wb')
 			writer = csv.writer(f)
 
 			writer.writerow(["Checking Time Logic Constraints"])
