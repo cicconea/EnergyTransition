@@ -30,43 +30,78 @@ def genK(params, model, pVar, nVar, i, t):
 
 # closed form learning by doing productivity 
 def closedLBDF(params, model):
-	FList = [params["Fl_0"]]
+	FList = []
 
 	# for each k key, dict gives value of M fit to the LBD data
 	# k=1 is full LBD, k=0.5 is partial LBD, and k=0 is no LBD
-	phiNegHalfKtoMDict = {"1":0.0000005 , "0.5":0.0000009, "0":0}
-	phiHalfKtoMDict = {"1":0.000001, "0.5":000002, "0":0}
-	phiThreeHalfKtoMDict = {"1":0.000002, "0.5":0.000006, "0":0}
+	phiNegHalfKtoMDict = {"1":0.0000005 , "0.5":0.0000009, "0":0} 		# phi = -1/2
+	phiZeroKtoMDict = {"1":0.00000075, "0.5":0.0000015, "0":0}			# phi = 0
+	phiQuarterKtoMDict = {"1":0.00000095, "0.5":0.0000019, "0":0}		# phi = 1/4
+	phiHalfKtoMDict = {"1":0.000001, "0.5":000002, "0":0} 				# phi = 1/2
+	phiThreeQuarterKtoMDict = {"1":0.0000014, "0.5":0.0000028, "0":0} 	# phi = 3/4
+	phiOneKtoMDict = {"1":0.0000017, "0.5":0.0000035, "0":0}			# phi = 1
+	phiThreeHalfKtoMDict = {"1":0.000002, "0.5":0.000006, "0":0}		# phi = 3/2
 
+	# fixed
 	if params["phi"] == -0.5:
 		params["M"] = phiNegHalfKtoMDict[str(params["k"])]
-		for i in range(1, params["period"]+1):
-			Integral = 2 * params["Fl_0"]**(1.5)/2.0
-			for t in range(1, i+1):
-				Integral += 3.0* params["k"] * params["M"] * exp(-1.5 * params["autonomousTech"]*t) * sqrt(getattr(model, "Lp" + str(t)))
-		
-			F = (1/(2.0**(2.0/3.0)))*exp(1.5 * params["autonomousTech"]*i) * (Integral)**(2.0/3.0)
+		for i in range(0, params["period"]+1):
+			temp =sqrt(params["L0"]) + sum([exp(-1.5*params["autonomousTech"]*j) * sqrt(getattr(model, "Lp" + str(j))) for j in range(1, i+1)])
+			Integral = 2* params["Fl_0"]**1.5 + 3 * params["k"] * params["M"] * temp		
+			F = (exp(1.5 * params["autonomousTech"]*i) * Integral**(2.0/3.0))/(2**(2.0/3.0))
 			FList.append(F)
 
+	# fixed
+	if params["phi"] == 0.0:
+		params["M"] = phiZeroKtoMDict[str(params["k"])]
+		for i in range(0, params["period"]+1):
+			temp =sqrt(params["L0"]) + sum([exp(-params["autonomousTech"]*j) * sqrt(getattr(model, "Lp" + str(j))) for j in range(1, i+1)])
+			Integral = params["Fl_0"] + params["k"] * params["M"] * temp		
+			F = exp(params["autonomousTech"]*i) * Integral
+			FList.append(F)
 
+	# fixed
+	if params["phi"] == 0.25:
+		params["M"] = phiQuarterKtoMDict[str(params["k"])]
+		for i in range(0, params["period"]+1):
+			temp =sqrt(params["L0"]) + sum([exp(-0.75*params["autonomousTech"]*j) * sqrt(getattr(model, "Lp" + str(j))) for j in range(1, i+1)])
+			Integral = 4 * params["Fl_0"]**0.75 + 3 * params["k"] * params["M"] * temp		
+			F = (exp(0.75 * params["autonomousTech"]*i) * Integral**(4.0/3.0))/(2**(8.0/3.0))
+			FList.append(F)
+
+	# fixed
 	if params["phi"] == 0.5:
 		params["M"] = phiHalfKtoMDict[str(params["k"])]
-		for i in range(1, params["period"]+1):
-			Integral = 2 * sqrt(params["Fl_0"])
-			for t in range(1, i+1):
-				Integral += params["k"]*params["M"] * exp(-0.5 * params["autonomousTech"]*t) * sqrt(getattr(model, "Lp" + str(t)))
-		
-			F = (1.0/4.0)*exp(params["autonomousTech"]*i) * (Integral)**2
+		for i in range(0, params["period"]+1):
+			temp =sqrt(params["L0"]) + sum([exp(-0.25*params["autonomousTech"]*j) * sqrt(getattr(model, "Lp" + str(j))) for j in range(1, i+1)])
+			Integral = 2 * sqrt(params["Fl_0"]) + params["k"] * params["M"] * temp		
+			F = (exp(params["autonomousTech"]*i) * Integral**2)/(4.0)
 			FList.append(F)
+
+	# fixed
+	if params["phi"] == 0.75:
+		params["M"] = phiThreeQuarterKtoMDict[str(params["k"])]
+		for i in range(0, params["period"]+1):
+			temp = sqrt(params["L0"]) + sum([exp(-0.5*params["autonomousTech"]*j) * sqrt(getattr(model, "Lp" + str(j))) for j in range(1, i+1)])
+			Integral = 4.0 * params["Fl_0"]**0.25 + params["k"] * params["M"] * temp		
+			F = (exp(params["autonomousTech"]*i) * Integral**4.0)/(256.0)
+			FList.append(F)
+
+	# to do
+	if params["phi"] == 1.0:
+		params["M"] = phiOneKtoMDict[str(params["k"])]
+		for i in range(0, params["period"]+1):
+			temp = params["k"]*params["M"] * sqrt(params["L0"]) + sum([exp(params["autonomousTech"]*j) * params["k"] * params["M"] * sqrt(getattr(model, "Lp" + str(j))) for j in range(1, i+1)])		
+			F = 2.71828 ** temp
+			FList.append(F)
+
 
 	if params["phi"] == 1.5:
 		params["M"] = phiThreeHalfKtoMDict[str(params["k"])]
-		for i in range(1, params["period"]+1):
-			Integral = 2 * sqrt(1/params["Fl_0"])
-			for t in range(1, i+1):
-				Integral += -params["k"]*params["M"] * exp(0.5 * params["autonomousTech"]*t) * sqrt(getattr(model, "Lp" + str(t)))
-		
-			F = 4.0*exp(params["autonomousTech"]*i) * (Integral)**-2
+		for i in range(0, params["period"]+1):
+			temp = sqrt(params["L0"]) + sum([exp(0.5*params["autonomousTech"]*j) * sqrt(getattr(model, "Lp" + str(j))) for j in range(1, i+1)])
+			Integral = 2 * sqrt(1.0/params["Fl_0"]) - params["k"] * params["M"] * temp		
+			F = 4* exp(params["autonomousTech"]*i) * Integral**-2.0
 			FList.append(F)
 
 	return FList

@@ -1,7 +1,7 @@
 from LBDhelpers import *
 from LBDpyomoVintageMin import vintageModel
 import time
-import csv
+import sys
 
 if __name__ == "__main__":
 	'''
@@ -12,7 +12,7 @@ if __name__ == "__main__":
 	# cases for learning by doing
 	# phi is intertemporal knowledge spillover
 	# k is degree of learning by doing transfer
-	phiList = [-0.5, 0.5, 1.5]
+	phiList =  [-0.5, 0.0, 0.25, 0.5, 0.75, 1.0, 1.5]
 	kList = [0, 0.5, 1]
 
 
@@ -35,6 +35,7 @@ if __name__ == "__main__":
 			# Create the model
 			model = vintageModel(params)
 			print "\t Constructed model in ", (time.time() - start)
+			model.write("model_" +  str(params["phi"]) + "_" + str(params["k"]) + ".nl", "nl")
 
 
 			# Solve the model
@@ -57,68 +58,9 @@ if __name__ == "__main__":
 			f.write(time.asctime() + " " + str(phi)+ " " + str(k) + " " +str(solverStatus) + " " + str(terminationCondition) + '\n')
 			f.close
 
-
-			# save output to files
-			f = open( "results/" + str(phi)+ "_" + str(k)+ "constraints.csv", 'wb')
-			writer = csv.writer(f)
-			for key, value in constraintDict.items():
-				writer.writerow([key, value])
-			f.close()
-
-			f = open( "results/" + str(phi)+ "_" + str(k)+ "variables.csv", 'wb')
-			writer = csv.writer(f)
-			for key, value in varDict.items():
-				writer.writerow([key, value])
-			f.close()
-
-			# save constraint checks:
-			f = open( "results/" + str(phi)+ "_" + str(k)+ "checks.csv", 'wb')
-			writer = csv.writer(f)
-
-			writer.writerow(["Checking Time Logic Constraints"])
-			writer.writerow(["Vintage","Year", "Name", "Value", "Target", "Flag"])
-
-			for i in range(0, params["period"] + 1):
-				for t in range(0, params["period"] + 1):
-					if t<i:
-						writer.writerow([i, t, "HnTimeLogic", constraintDict["HnTimeLogic"+str(i)+"-"+str(t)], "Zero", constraintDict["HnTimeLogic"+str(i)+"-"+str(t)] == 0])
-						writer.writerow([i, t, "LnTimeLogic", constraintDict["LnTimeLogic"+str(i)+"-"+str(t)], "Zero", constraintDict["LnTimeLogic"+str(i)+"-"+str(t)] == 0])
-
-					try:
-						temp = constraintDict["KhZERO"+str(i)+"-"+str(t)]
-					except KeyError:
-						temp = "Null"
-					writer.writerow([i, t, "KhZero", temp, "Zero", temp == 0])
-
-					try:
-						temp = constraintDict["KlZERO"+str(i)+"-"+str(t)]
-					except KeyError:
-						temp = "Null"
-					writer.writerow([i, t, "KlZero", temp, "Zero", temp == 0])
+			writeSolution(params, varDict, constraintDict, nameString = sys.argv[1])
 
 
-			writer.writerow(["Checking Capital Non-Negativity Constraints"])
-			writer.writerow(["Vintage", "Year", "Name", "Value", "Target", "Flag"])
-
-			for i in range(0, params["period"] + 1):
-				for t in range(0, params["period"] + 1):
-					if t>=i:
-						writer.writerow([i, t, "KhNonNeg", constraintDict["KhNonNeg"+str(i)+"-"+str(t)], "Non-Negative", constraintDict["KhNonNeg"+str(i)+"-"+str(t)] >= 0])
-						writer.writerow([i, t, "KlNonNeg", constraintDict["KlNonNeg"+str(i)+"-"+str(t)], "Non-Negative", constraintDict["KlNonNeg"+str(i)+"-"+str(t)] >= 0])
-
-			writer.writerow(["Checking Generation Constraints"])
-			writer.writerow(["Year", "Name", "Value", "Target", "Flag"])
-
-			for t in range(1, params["period"] + 1):
-				writer.writerow([t, "Generation Upper"+str(t), constraintDict["GenUpper"+str(t)], params["GList"][t], constraintDict["GenUpper"+str(t)] <= params["GList"][t] * 1.001])
-				writer.writerow([t, "Generation Lower"+str(t), constraintDict["GenLower"+str(t)], params["GList"][t], constraintDict["GenLower"+str(t)] <= params["GList"][t] * 0.999])
-
-			writer.writerow(["Checking Emission Constraint"])
-			writer.writerow(["Name", "Alpha", "Value", "Target", "Flag"])
-			maxEmit = sum([params["mhList"][i]*params["FhList"][i]*params["H0"] + params["mlList"][i]*params["Fl_0"]*params["L0"] for i in range(0, params["period"]+1)])
-			writer.writerow(["Emission", params["alpha"], constraintDict["emissions"], params["alpha"] * maxEmit, constraintDict["emissions"] <= params["alpha"]*maxEmit])
-
-			f.close()
 
 			print
 			print
