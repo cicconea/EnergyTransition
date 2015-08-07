@@ -12,61 +12,69 @@ if __name__ == "__main__":
 	# cases for learning by doing
 	# phi is intertemporal knowledge spillover
 	# k is degree of learning by doing transfer
-	#phiList = [-0.5, 0.0, 0.25, 0.5, 0.75, 1.0, 1.5] 
-	#kList =  [0, 0.5, 1]
+	phiList = [-0.5, 0.0, 0.25, 0.5, 0.75, 1.0] 
+	kList =  [0, 0.5, 1]
 
-	alphaRange = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-	years = [25, 50, 75, 100, 150]
-
-	for year in years:
-
-		start = time.time()
-
-		# generate the parameter data from the LBDhelpers module.
-		params = genData(year)
-		params[alpha] = params["CommittedReduction"][year]
-
-		#update parameters for multiple simulations
-		#params["alpha"] = alpha
+	#alphaRange = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+	#years = [25, 50, 75, 100, 150]
 
 
-
-		print
-		print "\t Imported parameters successfully in ", (time.time() - start)
-
-		# Create the model
-		model = vintageModel(params)
-		print "\t Constructed model in ", (time.time() - start)
-		model.write("model_alpha_" +  str(params["alpha"]) + "_period_" + str(params["period"]) + ".nl", "nl")
+	nameString = sys.argv[1]
 
 
-		# Solve the model
-		instance, solverStatus, terminationCondition = NLmodelSolve(model)
+	for phi in phiList:
+		for k in kList:
+				
 
-		# Get solution and constraint values
-		constraintDict = getConstraints(instance)
-		varDict = getVars(instance)
+			start = time.time()
 
+			# generate the parameter data from the LBDhelpers module.
+			params = genData(50)
 
-		#if str(solverStatus) != "warning":
-		print "\t Generating graphs in ", (time.time() - start)
-		genVintPlot(params, constraintDict, varDict)
-
-		print "\t Checking Constraints in ", (time.time() - start)
-		checkConstraintFeasibility(params, varDict, constraintDict)
-
-
-		f = open("solverStatus.txt", "a")
-		f.write(time.asctime() + " alpha is " + str(params["alpha"])+ " years are " + str(params["period"]) + " " +str(solverStatus) + " " + str(terminationCondition) + '\n')
-		f.close
-
-		writeSolution(params, varDict, constraintDict, nameString = sys.argv[1])
+			#update parameters for multiple simulations
+			params["phi"] = phi
+			params["k"] = k
 
 
 
-		print
-		print
-		print "\t Done in ", (time.time() - start)
+			print
+			print "\t Imported parameters successfully in ", (time.time() - start)
+
+			# Create the model
+			model = vintageModel(params)
+			print "\t Constructed model in ", (time.time() - start)
+			model.write("results/model_alpha_" + str(params["alpha"])+'_years_'+str(params["period"])+ '_phi_' + str(params["phi"]) + '_k_' + str(params["k"]) + "_" + nameString + ".nl", "nl")
+
+
+	 
+
+			# Solve the model
+			instance, solverStatus, terminationCondition = NLmodelSolve(model)
+
+			# Get solution and constraint values
+			constraintDict = getConstraints(instance)
+			varDict = getVars(instance)
+
+
+			#if str(solverStatus) != "warning":
+			print "\t Generating graphs in ", (time.time() - start)
+			genVintPlot(params, constraintDict, varDict, nameString)
+
+			print "\t Checking Constraints in ", (time.time() - start)
+			#checkConstraintFeasibility(params, varDict, constraintDict)
+
+
+			writeSolution(params, varDict, constraintDict, nameString = nameString)
+
+			f = open("results/solverStatus.txt", "a")
+			f.write(time.asctime() + "\talpha is\t" + str(params["alpha"])+ "\tyears are\t" + str(params["period"]) + "\tphi is\t" +str(params["phi"]) + '\tk is\t' + str(params["k"]) + "\ttype of simulation is\t" + nameString +"\tsolver status is\t" + str(solverStatus) + "\ttermination condition is\t" + str(terminationCondition))
+
+
+
+
+			print
+			print
+			print "\t Done in ", (time.time() - start)
 
 
 

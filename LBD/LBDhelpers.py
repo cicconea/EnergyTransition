@@ -109,9 +109,9 @@ def NLmodelSolve(model):
 	'''
 
 	# Create the ipopt solver plugin using the ASL interface
-	solver = 'asl:ipopt'
-	solver_io = 'nl'
-	opt = SolverFactory(solver,solver_io=solver_io)
+	solver = 'gurobi' #on local machine "asl:ipopt"
+	#solver_io = 'nl' for use with asl:ipopt only
+	opt = SolverFactory(solver) #,solver_io=solver_io)
 
 	# Send the model to ipopt and collect the solution
 	print "\t Solving the Model:"
@@ -265,7 +265,7 @@ def genPlot(params, constraintDict, varDict):
 	#plt.show()
 
 
-def genVintPlot(params, constraintDict, varDict):
+def genVintPlot(params, constraintDict, varDict, nameString):
 	'''
 	This function generates plots for the vintaged version of the model
 	'''
@@ -386,7 +386,7 @@ def genVintPlot(params, constraintDict, varDict):
 	ax6.set_xlabel('Years of Simulation')
 	ax6.set_ylabel('Billion kWh per Year')
 
-	plt.savefig('results/vintageResult_LBD_alpha_'+ str(params["alpha"])+'_years_'+str(params["period"])+'.png', bbox_inches='tight')
+	plt.savefig('results/vintageResult_LBD_alpha_'+ str(params["alpha"])+'_years_'+str(params["period"])+ '_phi_' + str(params["phi"]) + '_k_' + str(params["k"]) + nameString + '.png', bbox_inches='tight')
 	plt.close()
 	#plt.show()
 	return
@@ -457,20 +457,20 @@ def checkConstraintFeasibility(params, varDict, constraintDict):
 
 def writeSolution(params, varDict, constraintDict, nameString=""):
 	# save output to files
-	f = open( "results/" + str(params["alpha"])+ "_" + str(params["period"]) + "_" +nameString + "_constraints.csv", 'wb')
+	f = open( "results/alpha_" + str(params["alpha"])+'_years_'+str(params["period"])+ '_phi_' + str(params["phi"]) + '_k_' + str(params["k"]) + "_" + nameString +"_constraints.csv", 'wb')
 	writer = csv.writer(f)
 	for key, value in constraintDict.items():
 		writer.writerow([key, value])
 	f.close()
 
-	f = open( "results/" + str(params["alpha"])+ "_" + str(params["period"]) + "_" + nameString + "_variables.csv", 'wb')
+	f = open( "results/alpha_" + str(params["alpha"])+'_years_'+str(params["period"])+ '_phi_' + str(params["phi"]) + '_k_' + str(params["k"]) + "_" + nameString +"_variables.csv", 'wb')
 	writer = csv.writer(f)
 	for key, value in varDict.items():
 		writer.writerow([key, value])
 	f.close()
 
 	# save constraint checks:
-	f = open( "results/" + str(params["alpha"])+ "_" + str(params["period"]) + "_" + nameString + "_checks.csv", 'wb')
+	f = open( "results/alpha_" + str(params["alpha"])+'_years_'+str(params["period"])+ '_phi_' + str(params["phi"]) + '_k_' + str(params["k"]) + "_" + nameString +"_checks.csv", 'wb')
 	writer = csv.writer(f)
 
 	writer.writerow(["Checking Time Logic Constraints"])
