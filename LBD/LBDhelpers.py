@@ -386,7 +386,7 @@ def genVintPlot(params, constraintDict, varDict):
 	ax6.set_xlabel('Years of Simulation')
 	ax6.set_ylabel('Billion kWh per Year')
 
-	plt.savefig('results/vintageResult_LBD_phi_'+ str(params["phi"])+'_k_'+str(params["k"])+'_alpha_' + str(params["alpha"]) + '.png', bbox_inches='tight')
+	plt.savefig('results/vintageResult_LBD_alpha_'+ str(params["alpha"])+'_years_'+str(params["period"])+'.png', bbox_inches='tight')
 	plt.close()
 	#plt.show()
 	return
