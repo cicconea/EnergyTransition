@@ -7,6 +7,13 @@ import time
 import pympler
 
 
+
+'''
+This module creates the model object. Parameters are modified prior to coming here!
+'''
+
+
+
 # this function builds an expression for capital in time t for capital Hp/Hn/Lp/Ln of age i
 # sum from initial investment period i through existing time period t
 def genK(params, model, pVar, nVar, i, t):
@@ -41,7 +48,6 @@ def closedLBDF(params, model):
 	phiThreeQuarterKtoMDict = {"1":0.0000014, "0.5":0.0000028, "0":0} 	# phi = 3/4
 	phiOneKtoMDict = {"1":0.0000017, "0.5":0.0000035, "0":0}			# phi = 1
 
-	# fixed
 	if params["phi"] == -0.5:
 		params["M"] = phiNegHalfKtoMDict[str(params["k"])]
 		for i in range(0, params["period"]+1):
@@ -50,7 +56,6 @@ def closedLBDF(params, model):
 			F = (exp(1.5 * params["autonomousTech"]*i) * Integral**(2.0/3.0))/(2**(2.0/3.0))
 			FList.append(F)
 
-	# fixed
 	if params["phi"] == 0.0:
 		params["M"] = phiZeroKtoMDict[str(params["k"])]
 		for i in range(0, params["period"]+1):
@@ -59,7 +64,6 @@ def closedLBDF(params, model):
 			F = exp(params["autonomousTech"]*i) * Integral
 			FList.append(F)
 
-	# fixed
 	if params["phi"] == 0.25:
 		params["M"] = phiQuarterKtoMDict[str(params["k"])]
 		for i in range(0, params["period"]+1):
@@ -68,7 +72,6 @@ def closedLBDF(params, model):
 			F = (exp(0.75 * params["autonomousTech"]*i) * Integral**(4.0/3.0))/(2**(8.0/3.0))
 			FList.append(F)
 
-	# fixed
 	if params["phi"] == 0.5:
 		params["M"] = phiHalfKtoMDict[str(params["k"])]
 		for i in range(0, params["period"]+1):
@@ -77,7 +80,6 @@ def closedLBDF(params, model):
 			F = (exp(params["autonomousTech"]*i) * Integral**2)/(4.0)
 			FList.append(F)
 
-	# fixed
 	if params["phi"] == 0.75:
 		params["M"] = phiThreeQuarterKtoMDict[str(params["k"])]
 		for i in range(0, params["period"]+1):
@@ -86,7 +88,6 @@ def closedLBDF(params, model):
 			F = (exp(params["autonomousTech"]*i) * Integral**4.0)/(256.0)
 			FList.append(F)
 
-	# to do
 	if params["phi"] == 1.0:
 		params["M"] = phiOneKtoMDict[str(params["k"])]
 		for i in range(0, params["period"]+1):
@@ -183,7 +184,6 @@ def vintageModel(params):
 
 
 	# objective function is present value of investment cost minus operating cost savings
-
 	OCh = 0
 	OCl = 0
 	for i in range(1, len(N)):

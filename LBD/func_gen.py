@@ -1,5 +1,10 @@
 import math
 
+'''
+This module generates basic lists of exogenous parameters and is called from the helpers module
+'''
+
+
 
 # generates a k-length list w/ intercept base and slope mod
 # add minimum to allow a theoretical limit to efficiency/carbon intensity

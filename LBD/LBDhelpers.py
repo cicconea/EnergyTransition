@@ -109,9 +109,9 @@ def NLmodelSolve(model):
 	'''
 
 	# Create the ipopt solver plugin using the ASL interface
-	solver = 'gurobi' #on local machine "asl:ipopt"
+	solver = 'gurobi' #on local machine "asl:ipopt" Gurobi only works on RCC
 	#solver_io = 'nl' for use with asl:ipopt only
-	opt = SolverFactory(solver) #,solver_io=solver_io)
+	opt = SolverFactory(solver) #,solver_io=solver_io) <- add for running on local machine
 
 	# Send the model to ipopt and collect the solution
 	print "\t Solving the Model:"
@@ -269,7 +269,6 @@ def genVintPlot(params, constraintDict, varDict, nameString):
 	'''
 	This function generates plots for the vintaged version of the model
 	'''
-
 
 	# First create lists of each vintage net investment
 	H = []
@@ -456,6 +455,18 @@ def checkConstraintFeasibility(params, varDict, constraintDict):
 
 
 def writeSolution(params, varDict, constraintDict, nameString=""):
+	'''
+	This module writes the same thing as checkConstraintFeasibility - making sure that 
+	for the solved model that none of the constraints are violated and saving all the 
+	constraint and variable values in case they're needed for further analysis. 
+
+	nameString comes from an option when LBD_Vintage_Run.py is called from the command
+	line. It is optional but strongly recommended so that it's easier to remember the output
+	associated with a particular query and also to avoid overwriting any documentation.
+	'''
+
+
+
 	# save output to files
 	f = open( "results/alpha_" + str(params["alpha"])+'_years_'+str(params["period"])+ '_phi_' + str(params["phi"]) + '_k_' + str(params["k"]) + "_" + nameString +"_constraints.csv", 'wb')
 	writer = csv.writer(f)
