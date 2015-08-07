@@ -67,7 +67,7 @@ if __name__ == "__main__":
 			writeSolution(params, varDict, constraintDict, nameString = nameString)
 
 			f = open("results/solverStatus.txt", "a")
-			f.write(time.asctime() + "\talpha is\t" + str(params["alpha"])+ "\tyears are\t" + str(params["period"]) + "\tphi is\t" +str(params["phi"]) + '\tk is\t' + str(params["k"]) + "\ttype of simulation is\t" + nameString +"\tsolver status is\t" + str(solverStatus) + "\ttermination condition is\t" + str(terminationCondition))
+			f.write(time.asctime() + " alpha " + str(params["alpha"])+ " years " + str(params["period"]) + " phi " +str(params["phi"]) + ' k ' + str(params["k"]) + " type of simulation " + nameString +" solver status " + str(solverStatus) + " termination condition is " + str(terminationCondition) + "\n")
 
 
 
