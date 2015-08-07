@@ -40,7 +40,6 @@ def closedLBDF(params, model):
 	phiHalfKtoMDict = {"1":0.000001, "0.5":000002, "0":0} 				# phi = 1/2
 	phiThreeQuarterKtoMDict = {"1":0.0000014, "0.5":0.0000028, "0":0} 	# phi = 3/4
 	phiOneKtoMDict = {"1":0.0000017, "0.5":0.0000035, "0":0}			# phi = 1
-	phiThreeHalfKtoMDict = {"1":0.000002, "0.5":0.000006, "0":0}		# phi = 3/2
 
 	# fixed
 	if params["phi"] == -0.5:
@@ -95,15 +94,6 @@ def closedLBDF(params, model):
 			F = 2.71828 ** temp
 			FList.append(F)
 
-
-	if params["phi"] == 1.5:
-		params["M"] = phiThreeHalfKtoMDict[str(params["k"])]
-		for i in range(0, params["period"]+1):
-			temp = sqrt(params["L0"]) + sum([exp(0.5*params["autonomousTech"]*j) * sqrt(getattr(model, "Lp" + str(j))) for j in range(1, i+1)])
-			Integral = 2 * sqrt(1.0/params["Fl_0"]) - params["k"] * params["M"] * temp		
-			F = 4* exp(params["autonomousTech"]*i) * Integral**-2.0
-			FList.append(F)
-
 	return FList
 
 
@@ -123,11 +113,11 @@ def vintageModel(params):
 	# create variables
 	# Hp_i is the positive investment in high over all years list of all years
 	for i in range(1, params["period"] + 1):
-		setattr(model,"Hp"+str(i),Var(domain=NonNegativeReals, initialize = 0.00000005))
+		setattr(model,"Hp"+str(i),Var(domain=NonNegativeReals, initialize = 0.000005))
 		setattr(model,"Lp"+str(i),Var(domain=NonNegativeReals, initialize = params["L0"]))
 	for i in range(0, params["period"] + 1):	
 		setattr(model,"Hn"+str(i),Var(N, domain=NonNegativeReals, initialize = params["H0"]))
-		setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals, initialize = 0.00000005))
+		setattr(model,"Ln"+str(i),Var(N, domain=NonNegativeReals, initialize = 0.000005))
 
 	print "\t \t initialize variables in ", (time.time() - ts)
 	print "\t \t Hp1 memory is ", pympler.asizeof.asizeof(model.Hp1)

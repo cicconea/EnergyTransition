@@ -6,7 +6,7 @@ max_iter 10000
 # set frequency of the printed iterations
 print_frequency_iter 10
 
-tol 0.1
+tol 0.01
 #constr_viol_tol 0.001
 #acceptable_tol 0.1
 
