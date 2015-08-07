@@ -15,18 +15,19 @@ if __name__ == "__main__":
 	#phiList = [-0.5, 0.0, 0.25, 0.5, 0.75, 1.0, 1.5] 
 	#kList =  [0, 0.5, 1]
 
-	yearRange = [25, 50, 75, 100, 150]
+	alphaRange = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+	years = [25, 50, 75, 100, 150]
 
-	for year in yearRange:
+	for year in years:
 
 		start = time.time()
 
 		# generate the parameter data from the LBDhelpers module.
-		params = genData()
+		params = genData(year)
+		params[alpha] = params["CommittedReduction"][year]
 
 		#update parameters for multiple simulations
-		params["period"] = year
-		params["alpha"] = params["CommittedReduction"][year]
+		#params["alpha"] = alpha
 
 
 
